@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://adriaaante.github.io/demontazhnye_raboty/sitemap.xml
