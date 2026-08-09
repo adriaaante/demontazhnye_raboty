@@ -1122,10 +1122,10 @@ body.is-locked .fab {
   display: grid;
   place-items: center;
   border: 0;
-  background: var(--ink);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .5);
+  box-shadow: 0 12px 30px -12px rgba(232, 100, 27, .6);
 }
 
 .fab__toggle svg { width: 22px; height: 22px; fill: currentColor; transition: transform .35s var(--ease); }
