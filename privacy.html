@@ -166,8 +166,9 @@
       <button class="modal__close" type="button" data-modal-close aria-label="Закрыть окно"></button>
       <h2 class="modal__title" id="callback-title">Рассчитать стоимость</h2>
       <p class="modal__text">Оставьте имя и телефон — перезвоним в течение часа в рабочее время и посчитаем смету.</p>
-      <form class="form" id="callback-form" novalidate data-endpoint="api/lead.php">
+      <form class="form" id="callback-form" novalidate data-endpoint="https://voidaform.ru/api/lead.php">
         <input class="form__trap" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="site" value="подноль.рф">
         <input type="hidden" name="source" value="Рассчитать стоимость">
         <div class="form__field">
           <label for="cb-name">Имя</label>

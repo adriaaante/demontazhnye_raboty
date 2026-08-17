@@ -25,8 +25,13 @@
 - `js/main.js` — копия voidaform (меню, модалка, fab, формы); телефон и подпись
   заявки заменены. Формы шлют POST на `data-endpoint` (`api/lead.php`),
   при недоступности (на GitHub Pages PHP нет) открывают WhatsApp — это штатный путь.
-- `api/lead.php` — обработчик заявок в Telegram; НЕ работает на Pages, задел
-  на будущий PHP-хостинг. Конфиг `api/config.php` в репо не хранится.
+- **Заявки идут через общий обработчик voidaform**: у форм
+  `data-endpoint="https://voidaform.ru/api/lead.php"` + скрытое поле
+  `site=подноль.рф` — заявка падает в тот же Telegram-чат с пометкой сайта.
+  CORS-допуск домена прописан в `api/lead.php` репозитория voidaform.ru
+  (allowlist: подноль.рф в punycode + adriaaante.github.io). Секреты
+  TG_BOT_TOKEN/TG_CHAT_ID этому репо НЕ нужны. Локальный `api/lead.php` —
+  резерв на случай, если сайты решат разъехаться по ботам.
 - `assets/img/*.jpg` — изображения сгенерированы (Higgsfield nano_banana_pro),
   реальных фото объектов пока нет: hero (896×1200), screed/waste/office/shell (1376×768).
 - Логотип — инлайн SVG (оранжевый квадрат + перечёркнутый ноль «Ø»), файл только

@@ -350,9 +350,10 @@
             <p>Москва и Московская область</p>
           </div>
         </div>
-        <form class="form reveal" id="lead-form" novalidate data-endpoint="api/lead.php">
+        <form class="form reveal" id="lead-form" novalidate data-endpoint="https://voidaform.ru/api/lead.php">
           <input class="form__trap" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <input type="hidden" name="source" value="Форма в разделе «Контакты»">
+          <input type="hidden" name="site" value="подноль.рф">
+        <input type="hidden" name="source" value="Форма в разделе «Контакты»">
           <div class="form__field">
             <label for="f-name">Имя</label>
             <input id="f-name" name="name" type="text" autocomplete="name" required placeholder="Как к вам обращаться">
@@ -426,8 +427,9 @@
       <button class="modal__close" type="button" data-modal-close aria-label="Закрыть окно"></button>
       <h2 class="modal__title" id="callback-title">Рассчитать стоимость</h2>
       <p class="modal__text">Оставьте имя и телефон — перезвоним в течение часа в рабочее время и посчитаем смету.</p>
-      <form class="form" id="callback-form" novalidate data-endpoint="api/lead.php">
+      <form class="form" id="callback-form" novalidate data-endpoint="https://voidaform.ru/api/lead.php">
         <input class="form__trap" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="site" value="подноль.рф">
         <input type="hidden" name="source" value="Рассчитать стоимость">
         <div class="form__field">
           <label for="cb-name">Имя</label>
