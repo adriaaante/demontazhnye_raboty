@@ -33,12 +33,19 @@
   `favicon.svg`. Название «Под Ноль» = отраслевой термин «демонтаж под ноль».
 
 ## Деплой
-- GitHub Pages через Actions (`.github/workflows/pages.yml`): push в `main` →
-  артефакт (всё, кроме `scripts/`, `CLAUDE.md`, `.git*`) → deploy-pages.
-  `configure-pages` с `enablement: true` включает Pages сам при первом прогоне.
-- URL: https://adriaaante.github.io/demontazhnye_raboty/
-- **Пути относительные** (сайт в подпапке Pages). Canonical/OG/sitemap/robots
-  указывают на Pages-URL — при переезде на домен заменить во всех четырёх местах.
+- **Боевой домен — подноль.рф** (punycode `xn--d1aofccc0h.xn--p1ai`), куплен
+  17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
+  sitemap/robots указывают на punycode-домен.
+- Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
+  (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/
+  `FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
+  подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке) и опционально
+  `TG_BOT_TOKEN`/`TG_CHAT_ID` для Telegram-заявок. Пока секретов нет, воркфлоу
+  мягко пропускает выкладку (warning, не ошибка).
+- `.htaccess` — https, без www, запрет config.php, кэш и gzip.
+- GitHub Pages (`pages.yml`) оставлен как стейджинг:
+  https://adriaaante.github.io/demontazhnye_raboty/ (canonical смотрит на домен,
+  дублем в поиске не станет). **Пути относительные** — работают и там и там.
 - Цены на сайте не указываются — «смета по фото за 1 час», фиксация в договоре.
 
 ## Команды

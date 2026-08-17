@@ -1,0 +1,85 @@
+name: Deploy to Beget
+
+# Основная выкладка: push в main → сайт уезжает на подноль.рф по FTP.
+# Требует секретов FTP_SERVER / FTP_USERNAME / FTP_PASSWORD / FTP_DIR;
+# пока они не заданы — шаг деплоя просто пропускается (сайт живёт на Pages).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-beget
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Проверить, что секреты FTP заданы
+        id: gate
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+        run: |
+          if [ -z "$FTP_SERVER" ]; then
+            echo "::warning::секрет FTP_SERVER не задан — выкладка на Beget пропущена"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Забрать код
+        if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v4
+
+      - name: Проверить, что ключевые файлы на месте
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          for f in index.html 404.html privacy.html consent.html .htaccess robots.txt sitemap.xml \
+                   css/style.css js/main.js favicon.svg api/lead.php \
+                   assets/img/hero.jpg assets/fonts/montserrat-latin.woff2 assets/fonts/montserrat-cyrillic.woff2; do
+            [ -f "$f" ] || { echo "::error::нет файла $f — выкладка остановлена"; exit 1; }
+          done
+          echo "все ключевые файлы на месте"
+
+      # Токен бота и id чата не хранятся в репозитории: конфиг обработчика
+      # заявок собирается здесь из секретов и уезжает на хостинг вместе с сайтом.
+      # Пока секретов нет — форма работает через запасной путь WhatsApp.
+      - name: Собрать конфиг Telegram-бота
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          if [ -z "$TG_BOT_TOKEN" ] || [ -z "$TG_CHAT_ID" ]; then
+            echo "::warning::секреты TG_BOT_TOKEN / TG_CHAT_ID не заданы — заявки пойдут в WhatsApp"
+            exit 0
+          fi
+          mkdir -p api
+          {
+            echo "<?php"
+            echo "// файл собирается автоматически при выкладке, руками не править"
+            echo "return ["
+            echo "    'token' => '${TG_BOT_TOKEN}',"
+            echo "    'chat_id' => '${TG_CHAT_ID}',"
+            echo "];"
+          } > api/config.php
+          echo "конфиг создан"
+
+      - name: Залить на хостинг по FTP
+        if: steps.gate.outputs.ready == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_DIR }}
+          protocol: ftp
+          # в репозитории лежат и служебные файлы — на хостинг они не нужны
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            scripts/**
+            CLAUDE.md
+            **/.DS_Store

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://adriaaante.github.io/demontazhnye_raboty/sitemap.xml
+Sitemap: https://xn--d1aofccc0h.xn--p1ai/sitemap.xml
