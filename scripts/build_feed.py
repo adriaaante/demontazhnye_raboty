@@ -9,22 +9,34 @@
 Авито обязательно требует цену. В текстовый файл попадают с пометкой.
 """
 import os, sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ads import ADS, TAIL, PHONE
 
 REPO = "/workspace/demontazhnye_raboty"
+# Даты в фиде Авито читает по Москве, а сборка может идти на сервере в UTC.
+MSK = timezone(timedelta(hours=3))
+
+
+def now_msk():
+    return datetime.now(MSK)
+
+
 SITE = "https://xn--d1aofccc0h.xn--p1ai"      # подноль.рф в punycode: надёжнее для внешних систем
 # Телефон аккаунта Авито (Тихонов Никита) — заявки должны идти туда,
 # где их реально принимают. На сайте подноль.рф номер другой, временный.
 PHONE_RAW = "+79877771162"
 
-# Пауза показов. Пока True, у каждого объявления проставляется <DateEnd> в
-# прошлом — Авито снимает объявление с публикации, но не удаляет: заголовки,
-# тексты, картинки и id остаются, включить обратно = поставить False,
-# перегенерировать фид и запустить выгрузку.
+# Пауза показов. Пока True, каждому объявлению проставляется <DateEnd> —
+# дата окончания размещения, до которой Авито доводит объявление и снимает
+# его с публикации. Сами объявления и их id сохраняются: чтобы вернуть
+# показы, ставим False, пересобираем фид и запускаем выгрузку.
+#
+# Дата именно в БЛИЖАЙШЕМ БУДУЩЕМ, а не в прошлом: на прошедшую дату
+# автозагрузка отвечает «Прошла дата окончания размещения» и пропускает
+# объявление, оставляя его висеть до своей прежней даты (проверено 16.09.26).
 PAUSED = True
 
 # Раздел Авито, куда идут объявления. Названия сверяются с кабинетом —
@@ -80,11 +92,19 @@ def options(tag, values):
 
 
 def date_end():
-    """На паузе — дата окончания в прошлом, иначе тега нет вовсе."""
+    """На паузе — дата окончания сразу после ближайшей выгрузки, иначе тега нет.
+
+    Автозагрузка идёт раз в час, поэтому целимся на следующий круглый час
+    плюс 20 минут: к моменту выгрузки дата ещё не наступила, Авито примет её
+    и само снимет объявления примерно через полчаса.
+    """
     if not PAUSED:
         return ""
-    past = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
-    return f"\n    <DateEnd>{past}</DateEnd>"
+    now = now_msk()
+    stop = now.replace(minute=20, second=0, microsecond=0) + timedelta(hours=1)
+    if (stop - now) < timedelta(minutes=20):
+        stop += timedelta(hours=1)
+    return f"\n    <DateEnd>{stop:%Y-%m-%dT%H:%M:%S}</DateEnd>"
 
 
 def garbage_ad(ad, start, imgs):
@@ -117,7 +137,7 @@ def description(ad):
 
 def build_xml(ads):
     shift = timedelta(days=-2) if PAUSED else timedelta(minutes=5)
-    start = (datetime.now() + shift).strftime("%Y-%m-%dT%H:%M:%S")
+    start = (now_msk() + shift).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
     for ad in ads:
@@ -160,7 +180,7 @@ def build_md(ads):
     lines = [
         "# Объявления «Под Ноль» для Авито",
         "",
-        f"Всего: {len(ads)}. Составлено {datetime.now():%d.%m.%Y}.",
+        f"Всего: {len(ads)}. Составлено {now_msk():%d.%m.%Y}.",
         "",
         "Цены — «от», выставлены чуть ниже верхних объявлений в выдаче Москвы.",
         "Картинки лежат в `avito/img/`: `-1` — обложка на фото, `-2` — карточка условий.",
