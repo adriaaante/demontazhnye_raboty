@@ -2,7 +2,7 @@
 <Ads formatVersion="3" target="Avito.ru">
   <Ad>
     <Id>pauza-zaglushka</Id>
-    <DateBegin>2026-10-16T17:15:53</DateBegin>
+    <DateBegin>2027-09-16T17:19:15</DateBegin>
     <Category>Предложение услуг</Category>
     <ServiceType>Строительство</ServiceType>
     <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
@@ -49,7 +49,7 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/pauza-zaglushka-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79877771162</ContactPhone>
+    <ContactPhone>+79877788894</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
     <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
     <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
