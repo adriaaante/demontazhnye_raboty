@@ -17,22 +17,45 @@ from ads import ADS, TAIL, PHONE
 
 REPO = "/workspace/demontazhnye_raboty"
 SITE = "https://xn--d1aofccc0h.xn--p1ai"      # подноль.рф в punycode: надёжнее для внешних систем
-PHONE_RAW = "+79093410785"
+# Телефон аккаунта Авито (Тихонов Никита) — заявки должны идти туда,
+# где их реально принимают. На сайте подноль.рф номер другой, временный.
+PHONE_RAW = "+79877771162"
 
 # Раздел Авито, куда идут объявления. Названия сверяются с кабинетом —
 # если Авито ругнётся на валидации, править здесь.
+# Значения ниже — из официального шаблона Авито «Снос и демонтаж»
+# (avito.ru/autoload/documentation/templates/77203). Менять только по нему:
+# любое своё написание Авито отвергает с кодом 1073.
 CATEGORY = "Предложение услуг"
+SERVICE_TYPE = "Строительство"
+SERVICE_SUBTYPE = "Снос и демонтаж"
 
-# Кандидаты на «Вид услуги»: Авито отверг «Строительство и ремонт» (код 1073).
-# Раскидываем по объявлениям, чтобы одной выгрузкой понять, что принимается.
-SERVICE_TYPES = [
-    "Ремонт и строительство",
-    "Снос и демонтаж",
-    "Строительство и ремонт домов",
-    "Демонтажные работы",
-    "Ремонт, строительство",
-    "Строительные работы",
-]
+# Обязательные параметры категории.
+WORK_EXPERIENCE = "6 лет"          # из списка: Меньше года, 1 год … 10 лет и больше
+TEAM_SIZE = "2-4 человека"         # 1 человек | 2-4 человека | 5-20 человек | больше 20
+GUARANTEE = "Есть"                 # Есть | Нет
+WORK_WITH_CONTRACT = "Да"
+WORKING_METHOD = ["С помощью ручных инструментов", "С помощью техники"]
+WORK_DAYS = ["пн.", "вт.", "ср.", "чт.", "пт.", "сб.", "вс."]
+
+# Что именно демонтируем — набор зависит от услуги (несколько значений через «|»).
+OBJECTS_FLAT = ["Отделка", "Перегородка", "Стена"]
+OBJECTS_FULL = ["Отделка", "Перегородка", "Стена", "Перекрытия"]
+OBJECTS_COMMERCIAL = ["Отделка", "Перегородка", "Стена", "Складские и промышленные объекты"]
+
+# Какие объекты указывать каждому объявлению.
+OBJECTS_BY_AD = {
+    "ofis": OBJECTS_COMMERCIAL,
+    "ofisnye-peregorodki": OBJECTS_COMMERCIAL,
+    "kvartira-pod-klyuch": OBJECTS_FULL,
+    "beton": OBJECTS_FULL,
+}
+
+
+def options(tag, values):
+    """Несколько значений одного параметра: Авито ждёт вложенные <Option>."""
+    inner = "".join(f"<Option>{v}</Option>" for v in values)
+    return f"<{tag}>{inner}</{tag}>"
 
 
 def description(ad):
@@ -44,16 +67,17 @@ def build_xml(ads):
     start = (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
-    for n_ad, ad in enumerate(ads):
-        stype = SERVICE_TYPES[n_ad % len(SERVICE_TYPES)]
+    for ad in ads:
         imgs = "".join(
             f'\n      <Image url="{SITE}/avito/img/{ad["id"]}-{n}.jpg"/>'
             for n in (1, 2))
+        objects = OBJECTS_BY_AD.get(ad["id"], OBJECTS_FLAT)
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>
     <DateBegin>{start}</DateBegin>
     <Category>{CATEGORY}</Category>
-    <ServiceType>{stype}</ServiceType>
+    <ServiceType>{SERVICE_TYPE}</ServiceType>
+    <ServiceSubtype>{SERVICE_SUBTYPE}</ServiceSubtype>
     <Title>{escape(ad['title'])}</Title>
     <Description><![CDATA[{description(ad)}]]></Description>
     <Price>{ad['price']}</Price>
@@ -62,6 +86,15 @@ def build_xml(ads):
     <Address>Москва</Address>
     <ContactPhone>{PHONE_RAW}</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    {options("DismantlingObject", objects)}
+    {options("WorkingMethod", WORKING_METHOD)}
+    <WorkExperience>{WORK_EXPERIENCE}</WorkExperience>
+    <TeamSize>{TEAM_SIZE}</TeamSize>
+    <Guarantee>{GUARANTEE}</Guarantee>
+    <WorkWithContract>{WORK_WITH_CONTRACT}</WorkWithContract>
+    {options("WorkDays", WORK_DAYS)}
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>""")
     out.append("</Ads>")
     return "\n".join(out) + "\n"

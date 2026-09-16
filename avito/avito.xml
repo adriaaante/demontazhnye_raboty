@@ -2,9 +2,10 @@
 <Ads formatVersion="3" target="Avito.ru">
   <Ad>
     <Id>kvartira-pod-klyuch</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Ремонт и строительство</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж квартиры под ключ с вывозом мусора</Title>
     <Description><![CDATA[Демонтаж квартиры под ключ — от 990 ₽/м² вместе с вывозом мусора. Снимаем всё до бетона: стены, стяжку, плитку, штукатурку, сантехнику, электрику, окна и двери. Сдаём чистую коробку, готовую под ремонт. Однушка — 3–5 дней, трёшка — 5–10 дней.
 
@@ -48,14 +49,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/kvartira-pod-klyuch-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option><Option>Перекрытия</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>novostroyka</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Снос и демонтаж</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж в новостройке под чистовую отделку</Title>
     <Description><![CDATA[Демонтаж застройщика в новостройке — от 690 ₽/м². Снимаем дешёвую отделку от девелопера: тонкую стяжку, гипсокартонные короба, межкомнатные перегородки под новую планировку. Готовим квартиру под нормальный ремонт. От 2 дней.
 
@@ -95,14 +106,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/novostroyka-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>steny-peregorodki</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Строительство и ремонт домов</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж стен и перегородок в квартире</Title>
     <Description><![CDATA[Снос стен и перегородок — от 690 ₽/м². Кирпич, пеноблок, гипсокартон, пазогребень. Аккуратно режем проёмы под новую планировку. Несущие конструкции не трогаем без проекта — бесплатно подскажем, что можно сносить без согласования.
 
@@ -145,14 +166,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/steny-peregorodki-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>kirpichnaya-stena</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Демонтажные работы</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Снос кирпичной стены, демонтаж кладки</Title>
     <Description><![CDATA[Демонтаж кирпичной стены — от 790 ₽/м². Сносим кладку любой толщины: в полкирпича, в кирпич и толще. Работаем отбойным молотком и вручную там, где нужна аккуратность. Мусор выносим и вывозим в тот же день.
 
@@ -192,14 +223,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/kirpichnaya-stena-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>gipsokarton</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Ремонт, строительство</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж гипсокартона, перегородок из ГКЛ</Title>
     <Description><![CDATA[Демонтаж гипсокартона — от 240 ₽/м². Снимаем перегородки, короба, ниши, подвесные потолки из ГКЛ вместе с металлическим каркасом. Быстро и без лишней пыли — гипсокартон разбираем, а не ломаем. Выносим и вывозим сразу.
 
@@ -238,14 +279,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/gipsokarton-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>styazhka</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Строительные работы</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж стяжки пола в квартире</Title>
     <Description><![CDATA[Демонтаж стяжки — от 490 ₽/м². Снимаем цементную и бетонную стяжку любой толщины до плиты перекрытия. Работаем отбойными молотками с промышленным пылесосом — пыли в разы меньше. Мусор выносим в тот же день.
 
@@ -288,14 +339,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/styazhka-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>plitka</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Ремонт и строительство</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж плитки со стен и пола</Title>
     <Description><![CDATA[Демонтаж плитки — от 490 ₽/м². Снимаем кафель со стен и пола в ванной, санузле, на кухне. Убираем вместе со старым клеем до основания, чтобы плиточник сразу мог работать. Мусор собираем в мешки и вывозим.
 
@@ -335,14 +396,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/plitka-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>parket-laminat</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Снос и демонтаж</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж паркета, ламината, линолеума</Title>
     <Description><![CDATA[Демонтаж напольных покрытий — от 340 ₽/м². Снимаем паркет, паркетную доску, ламинат, линолеум, ковролин вместе с подложкой, фанерой и лагами. Освобождаем пол до стяжки или плиты. Вынос и вывоз мусора — в тот же день.
 
@@ -382,14 +453,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/parket-laminat-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>shtukaturka</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Строительство и ремонт домов</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж штукатурки со стен до кирпича</Title>
     <Description><![CDATA[Снятие штукатурки — от 270 ₽/м². Сбиваем старую штукатурку со стен и потолка до кирпича или бетона. Убираем всё, что отслаивается и бухтит, — новая отделка ляжет на надёжное основание. Мусор выносим и вывозим.
 
@@ -428,14 +509,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/shtukaturka-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>potolki</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Демонтажные работы</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж потолков: натяжной, ГКЛ, армстронг</Title>
     <Description><![CDATA[Демонтаж потолков — от 240 ₽/м². Снимаем натяжные, подвесные, реечные потолки и армстронг вместе с каркасом и профилями. Аккуратно отсоединяем светильники и проводку. Убираем за собой и вывозим мусор.
 
@@ -475,14 +566,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/potolki-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>okna-dveri</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Ремонт, строительство</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж окон, дверей, балконных блоков</Title>
     <Description><![CDATA[Демонтаж окон и дверей — от 1 200 ₽ за штуку. Снимаем деревянные и пластиковые окна, балконные блоки, межкомнатные и входные двери вместе с коробками и откосами. Проём освобождаем полностью — под новый монтаж.
 
@@ -524,14 +625,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/okna-dveri-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>mebel-kuhnya</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Строительные работы</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж встроенной мебели и старой кухни</Title>
     <Description><![CDATA[Демонтаж встроенной мебели — от 2 500 ₽. Разбираем старые кухни, шкафы-купе, гардеробные, антресоли. Аккуратно, не повреждая стены и пол. Выносим и вывозим — или оставляем в разобранном виде, если мебель вам ещё нужна.
 
@@ -572,14 +683,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/mebel-kuhnya-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>ofis</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Ремонт и строительство</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж офиса и коммерческих помещений</Title>
     <Description><![CDATA[Демонтаж офисов — от 590 ₽/м². Работаем ночью и в выходные, чтобы бизнес-центр не останавливался. Перегородки, потолки армстронг, фальшполы, инженерия. Согласуем график с управляющей компанией здания сами.
 
@@ -625,14 +746,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/ofis-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option><Option>Складские и промышленные объекты</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>ofisnye-peregorodki</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Снос и демонтаж</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Демонтаж офисных перегородок и фальшпола</Title>
     <Description><![CDATA[Демонтаж офисных перегородок — от 490 ₽/м². Снимаем стеклянные, алюминиевые, гипсокартонные перегородки и фальшполы. Стекло демонтируем аккуратно и упаковываем — его часто можно продать или переставить.
 
@@ -673,14 +804,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/ofisnye-peregorodki-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option><Option>Складские и промышленные объекты</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>vyvoz-konteyner</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Строительство и ремонт домов</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Вывоз строительного мусора контейнером</Title>
     <Description><![CDATA[Вывоз строительного мусора — от 6 900 ₽ за контейнер 8 м³. Подаём в день обращения. Есть контейнеры 8, 20 и 27 м³. Вывозим на лицензированный полигон и выдаём талоны на утилизацию. Грузчики — по желанию.
 
@@ -727,14 +868,24 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/vyvoz-konteyner-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
   <Ad>
     <Id>vynos-gruzchiki</Id>
-    <DateBegin>2026-09-16T11:14:30</DateBegin>
+    <DateBegin>2026-09-16T11:55:52</DateBegin>
     <Category>Предложение услуг</Category>
-    <ServiceType>Демонтажные работы</ServiceType>
+    <ServiceType>Строительство</ServiceType>
+    <ServiceSubtype>Снос и демонтаж</ServiceSubtype>
     <Title>Вынос мусора из квартиры, грузчики</Title>
     <Description><![CDATA[Вынос строительного мусора из квартиры — от 2 500 ₽. Соберём в мешки, вынесем с любого этажа, погрузим и вывезем. Работаем и там, где нет грузового лифта. Подъезд после нас подметаем.
 
@@ -780,7 +931,16 @@
       <Image url="https://xn--d1aofccc0h.xn--p1ai/avito/img/vynos-gruzchiki-2.jpg"/>
     </Images>
     <Address>Москва</Address>
-    <ContactPhone>+79093410785</ContactPhone>
+    <ContactPhone>+79877771162</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
+    <DismantlingObject><Option>Отделка</Option><Option>Перегородка</Option><Option>Стена</Option></DismantlingObject>
+    <WorkingMethod><Option>С помощью ручных инструментов</Option><Option>С помощью техники</Option></WorkingMethod>
+    <WorkExperience>6 лет</WorkExperience>
+    <TeamSize>2-4 человека</TeamSize>
+    <Guarantee>Есть</Guarantee>
+    <WorkWithContract>Да</WorkWithContract>
+    <WorkDays><Option>пн.</Option><Option>вт.</Option><Option>ср.</Option><Option>чт.</Option><Option>пт.</Option><Option>сб.</Option><Option>вс.</Option></WorkDays>
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
   </Ad>
 </Ads>
