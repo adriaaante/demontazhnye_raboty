@@ -29,15 +29,22 @@ SITE = "https://xn--d1aofccc0h.xn--p1ai"      # подноль.рф в punycode:
 # где их реально принимают. На сайте подноль.рф номер другой, временный.
 PHONE_RAW = "+79877771162"
 
-# Пауза показов. Пока True, каждому объявлению проставляется <DateEnd> —
-# дата окончания размещения, до которой Авито доводит объявление и снимает
-# его с публикации. Сами объявления и их id сохраняются: чтобы вернуть
-# показы, ставим False, пересобираем фид и запускаем выгрузку.
+# Пауза показов. Пока True, в фид не попадает ни одно рабочее объявление:
+# автозагрузка держит Авито в соответствии с файлом, и всё, чего в файле нет,
+# уходит с публикации. Вернуть показы = поставить False, пересобрать фид
+# и дождаться ближайшей выгрузки (она идёт раз в час).
 #
-# Дата именно в БЛИЖАЙШЕМ БУДУЩЕМ, а не в прошлом: на прошедшую дату
-# автозагрузка отвечает «Прошла дата окончания размещения» и пропускает
-# объявление, оставляя его висеть до своей прежней даты (проверено 16.09.26).
+# Совсем пустой файл не годится — валидатор Авито считает его несоответствующим
+# формату, а выгрузка с ошибкой ничего не меняет. Поэтому в фиде остаётся одна
+# заглушка с собственным id и датой начала через месяц: файл валидный, а
+# публиковать по нему нечего.
+#
+# Через <DateEnd> снять объявления нельзя, проверено 16.09.2026: дата в прошлом
+# даёт «Прошла дата окончания размещения» и объявление просто пропускается,
+# дата в будущем — «Без изменений», срок размещения у живого объявления
+# не меняется. Ручки «остановить» в API тоже нет.
 PAUSED = True
+PAUSE_STUB_ID = "pauza-zaglushka"
 
 # Раздел Авито, куда идут объявления. Названия сверяются с кабинетом —
 # если Авито ругнётся на валидации, править здесь.
@@ -91,27 +98,11 @@ def options(tag, values):
     return f"<{tag}>{inner}</{tag}>"
 
 
-def date_end():
-    """На паузе — дата окончания сразу после ближайшей выгрузки, иначе тега нет.
-
-    Автозагрузка идёт раз в час, поэтому целимся на следующий круглый час
-    плюс 20 минут: к моменту выгрузки дата ещё не наступила, Авито примет её
-    и само снимет объявления примерно через полчаса.
-    """
-    if not PAUSED:
-        return ""
-    now = now_msk()
-    stop = now.replace(minute=20, second=0, microsecond=0) + timedelta(hours=1)
-    if (stop - now) < timedelta(minutes=20):
-        stop += timedelta(hours=1)
-    return f"\n    <DateEnd>{stop:%Y-%m-%dT%H:%M:%S}</DateEnd>"
-
-
 def garbage_ad(ad, start, imgs):
     """Объявление в категории «Вывоз мусора и вторсырья» — свой набор полей."""
     return f"""  <Ad>
     <Id>{ad['id']}</Id>
-    <DateBegin>{start}</DateBegin>{date_end()}
+    <DateBegin>{start}</DateBegin>
     <Category>{CATEGORY}</Category>
     <ServiceType>{GARBAGE_SERVICE_TYPE}</ServiceType>
     <Title>{escape(ad['title'])}</Title>
@@ -136,7 +127,7 @@ def description(ad):
 
 
 def build_xml(ads):
-    shift = timedelta(days=-2) if PAUSED else timedelta(minutes=5)
+    shift = timedelta(days=30) if PAUSED else timedelta(minutes=5)
     start = (now_msk() + shift).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
@@ -150,7 +141,7 @@ def build_xml(ads):
             continue
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>
-    <DateBegin>{start}</DateBegin>{date_end()}
+    <DateBegin>{start}</DateBegin>
     <Category>{CATEGORY}</Category>
     <ServiceType>{SERVICE_TYPE}</ServiceType>
     <ServiceSubtype>{SERVICE_SUBTYPE}</ServiceSubtype>
@@ -213,12 +204,16 @@ def build_md(ads):
 
 def main():
     ready = [a for a in ADS if not a.get("pending")]
+    feed = [dict(ready[0], id=PAUSE_STUB_ID)] if PAUSED else ready
 
     os.makedirs(f"{REPO}/avito", exist_ok=True)
-    open(f"{REPO}/avito/avito.xml", "w", encoding="utf-8").write(build_xml(ready))
+    open(f"{REPO}/avito/avito.xml", "w", encoding="utf-8").write(build_xml(feed))
     open(f"{REPO}/avito/OBYAVLENIYA.md", "w", encoding="utf-8").write(build_md(ADS))
 
-    print(f"avito.xml: {len(ready)} объявлений с ценой")
+    if PAUSED:
+        print("avito.xml: ПАУЗА — только заглушка, показов нет")
+    else:
+        print(f"avito.xml: {len(ready)} объявлений с ценой")
     print(f"OBYAVLENIYA.md: все {len(ADS)}, из них {len(ADS) - len(ready)} без цены")
 
 
