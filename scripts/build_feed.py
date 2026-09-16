@@ -21,6 +21,12 @@ SITE = "https://xn--d1aofccc0h.xn--p1ai"      # подноль.рф в punycode:
 # где их реально принимают. На сайте подноль.рф номер другой, временный.
 PHONE_RAW = "+79877771162"
 
+# Пауза показов. Пока True, у каждого объявления проставляется <DateEnd> в
+# прошлом — Авито снимает объявление с публикации, но не удаляет: заголовки,
+# тексты, картинки и id остаются, включить обратно = поставить False,
+# перегенерировать фид и запустить выгрузку.
+PAUSED = True
+
 # Раздел Авито, куда идут объявления. Названия сверяются с кабинетом —
 # если Авито ругнётся на валидации, править здесь.
 # Значения ниже — из официального шаблона Авито «Снос и демонтаж»
@@ -64,11 +70,19 @@ def options(tag, values):
     return f"<{tag}>{inner}</{tag}>"
 
 
+def date_end():
+    """На паузе — дата окончания в прошлом, иначе тега нет вовсе."""
+    if not PAUSED:
+        return ""
+    past = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
+    return f"\n    <DateEnd>{past}</DateEnd>"
+
+
 def garbage_ad(ad, start, imgs):
     """Объявление в категории «Вывоз мусора и вторсырья» — свой набор полей."""
     return f"""  <Ad>
     <Id>{ad['id']}</Id>
-    <DateBegin>{start}</DateBegin>
+    <DateBegin>{start}</DateBegin>{date_end()}
     <Category>{CATEGORY}</Category>
     <ServiceType>{GARBAGE_SERVICE_TYPE}</ServiceType>
     <Title>{escape(ad['title'])}</Title>
@@ -88,7 +102,8 @@ def description(ad):
 
 
 def build_xml(ads):
-    start = (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S")
+    shift = timedelta(days=-2) if PAUSED else timedelta(minutes=5)
+    start = (datetime.now() + shift).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
     for ad in ads:
@@ -101,7 +116,7 @@ def build_xml(ads):
             continue
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>
-    <DateBegin>{start}</DateBegin>
+    <DateBegin>{start}</DateBegin>{date_end()}
     <Category>{CATEGORY}</Category>
     <ServiceType>{SERVICE_TYPE}</ServiceType>
     <ServiceSubtype>{SERVICE_SUBTYPE}</ServiceSubtype>
