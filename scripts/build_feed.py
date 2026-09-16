@@ -43,6 +43,12 @@ OBJECTS_FLAT = ["Отделка", "Перегородка", "Стена"]
 OBJECTS_FULL = ["Отделка", "Перегородка", "Стена", "Перекрытия"]
 OBJECTS_COMMERCIAL = ["Отделка", "Перегородка", "Стена", "Складские и промышленные объекты"]
 
+# Вывоз мусора Авито не принимает в «Снос и демонтаж» — для него отдельная
+# категория со своим набором параметров (модерация вернула объявление с прямым
+# указанием, куда переносить).
+GARBAGE_ADS = {"vyvoz-konteyner"}
+GARBAGE_SERVICE_TYPE = "Вывоз мусора и вторсырья"
+
 # Какие объекты указывать каждому объявлению.
 OBJECTS_BY_AD = {
     "ofis": OBJECTS_COMMERCIAL,
@@ -56,6 +62,24 @@ def options(tag, values):
     """Несколько значений одного параметра: Авито ждёт вложенные <Option>."""
     inner = "".join(f"<Option>{v}</Option>" for v in values)
     return f"<{tag}>{inner}</{tag}>"
+
+
+def garbage_ad(ad, start, imgs):
+    """Объявление в категории «Вывоз мусора и вторсырья» — свой набор полей."""
+    return f"""  <Ad>
+    <Id>{ad['id']}</Id>
+    <DateBegin>{start}</DateBegin>
+    <Category>{CATEGORY}</Category>
+    <ServiceType>{GARBAGE_SERVICE_TYPE}</ServiceType>
+    <Title>{escape(ad['title'])}</Title>
+    <Description><![CDATA[{description(ad)}]]></Description>
+    <Price>{ad['price']}</Price>
+    <Images>{imgs}
+    </Images>
+    <Address>Москва</Address>
+    <ContactPhone>{PHONE_RAW}</ContactPhone>
+    <ManagerName>Под Ноль</ManagerName>
+  </Ad>"""
 
 
 def description(ad):
@@ -72,6 +96,9 @@ def build_xml(ads):
             f'\n      <Image url="{SITE}/avito/img/{ad["id"]}-{n}.jpg"/>'
             for n in (1, 2))
         objects = OBJECTS_BY_AD.get(ad["id"], OBJECTS_FLAT)
+        if ad["id"] in GARBAGE_ADS:
+            out.append(garbage_ad(ad, start, imgs))
+            continue
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>
     <DateBegin>{start}</DateBegin>
