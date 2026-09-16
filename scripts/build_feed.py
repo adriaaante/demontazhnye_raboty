@@ -22,7 +22,17 @@ PHONE_RAW = "+79093410785"
 # Раздел Авито, куда идут объявления. Названия сверяются с кабинетом —
 # если Авито ругнётся на валидации, править здесь.
 CATEGORY = "Предложение услуг"
-SERVICE_TYPE = "Строительство и ремонт"
+
+# Кандидаты на «Вид услуги»: Авито отверг «Строительство и ремонт» (код 1073).
+# Раскидываем по объявлениям, чтобы одной выгрузкой понять, что принимается.
+SERVICE_TYPES = [
+    "Ремонт и строительство",
+    "Снос и демонтаж",
+    "Строительство и ремонт домов",
+    "Демонтажные работы",
+    "Ремонт, строительство",
+    "Строительные работы",
+]
 
 
 def description(ad):
@@ -31,10 +41,11 @@ def description(ad):
 
 
 def build_xml(ads):
-    start = (datetime.now() + timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%S")
+    start = (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
-    for ad in ads:
+    for n_ad, ad in enumerate(ads):
+        stype = SERVICE_TYPES[n_ad % len(SERVICE_TYPES)]
         imgs = "".join(
             f'\n      <Image url="{SITE}/avito/img/{ad["id"]}-{n}.jpg"/>'
             for n in (1, 2))
@@ -42,7 +53,7 @@ def build_xml(ads):
     <Id>{ad['id']}</Id>
     <DateBegin>{start}</DateBegin>
     <Category>{CATEGORY}</Category>
-    <ServiceType>{SERVICE_TYPE}</ServiceType>
+    <ServiceType>{stype}</ServiceType>
     <Title>{escape(ad['title'])}</Title>
     <Description><![CDATA[{description(ad)}]]></Description>
     <Price>{ad['price']}</Price>
