@@ -112,7 +112,7 @@
       }
 
       function fallbackToWhatsApp() {
-        window.open("https://wa.me/79093410785?text=" + encodeURIComponent(text), "_blank", "noopener");
+        window.open("https://wa.me/79877788894?text=" + encodeURIComponent(text), "_blank", "noopener");
         done();
       }
 
