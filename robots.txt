@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /avito/
 
 Sitemap: https://xn--d1aofccc0h.xn--p1ai/sitemap.xml
