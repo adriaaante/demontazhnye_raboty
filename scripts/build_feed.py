@@ -130,7 +130,9 @@ def description(ad):
 
 
 def build_xml(ads):
-    shift = timedelta(days=365) if PAUSED else timedelta(minutes=5)
+    # Дата начала — чуть в прошлом: если поставить её вперёд, выгрузка
+    # отвечает «Не наступила дата начала размещения» и ждёт следующего круга.
+    shift = timedelta(days=365) if PAUSED else timedelta(minutes=-10)
     start = (now_msk() + shift).strftime("%Y-%m-%dT%H:%M:%S")
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
