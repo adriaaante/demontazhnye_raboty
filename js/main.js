@@ -86,10 +86,42 @@
   // Отправка заявки: уходит на api/lead.php, оттуда — в Telegram.
   // Если обработчик недоступен (нет PHP, сеть отвалилась) — открываем
   // WhatsApp с готовым текстом, чтобы заявка не потерялась.
+  //
+  // Защита от ботов: перед отправкой у обработчика берётся подписанный
+  // токен (GET ?token), заявка без него не принимается. Токен берём при
+  // первом касании формы — человек заполняет её дольше тех секунд, что
+  // требует сервер; если всё же успел быстрее, ждём и повторяем.
+  var TOKEN_MIN_AGE = 3500; // мс, с запасом к серверным трём секундам
+
   function wireLeadForm(form) {
     if (!form) return;
     var submit = form.querySelector("button[type=submit]");
     var submitLabel = submit ? submit.textContent : "";
+    var endpoint = form.getAttribute("data-endpoint");
+    var tokenPromise = null;
+    var tokenAt = 0;
+
+    function fetchToken() {
+      tokenAt = Date.now();
+      tokenPromise = fetch(endpoint + (endpoint.indexOf("?") > -1 ? "&" : "?") + "token=1", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { return j && j.ok && j.token ? j.token : null; })
+        .catch(function () { return null; });
+      return tokenPromise;
+    }
+    function tokenReadyIn() {
+      return Math.max(0, tokenAt + TOKEN_MIN_AGE - Date.now());
+    }
+    function wait(ms) {
+      return new Promise(function (res) { setTimeout(res, ms); });
+    }
+
+    if (endpoint && window.fetch && window.Promise) {
+      form.addEventListener("focusin", function onFirstTouch() {
+        form.removeEventListener("focusin", onFirstTouch);
+        fetchToken();
+      });
+    }
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -116,20 +148,35 @@
         done();
       }
 
-      var endpoint = form.getAttribute("data-endpoint");
-      if (!endpoint || !window.fetch || !window.FormData) { fallbackToWhatsApp(); return; }
-
-      var data = new FormData(form);
-      data.append("page", location.pathname);
+      if (!endpoint || !window.fetch || !window.FormData || !window.Promise) { fallbackToWhatsApp(); return; }
       if (submit) { submit.disabled = true; submit.textContent = "Отправляем…"; }
 
-      fetch(endpoint, { method: "POST", body: data })
-        .then(function (r) { return r.json().catch(function () { return null; }); })
-        .then(function (json) {
-          if (json && json.ok) done();
-          else fallbackToWhatsApp();
-        })
-        .catch(fallbackToWhatsApp);
+      function send(token) {
+        var data = new FormData(form);
+        data.append("page", location.pathname);
+        if (token) data.append("token", token);
+        return fetch(endpoint, { method: "POST", body: data })
+          .then(function (r) { return r.json().catch(function () { return null; }); });
+      }
+
+      // Одна попытка с текущим токеном; если сервер ответил про токен —
+      // ещё одна с новым (или той же, если просто поторопились). Дальше — WhatsApp.
+      var retried = false;
+      function attempt() {
+        return (tokenPromise || fetchToken())
+          .then(function (token) { return wait(tokenReadyIn()).then(function () { return send(token); }); })
+          .then(function (json) {
+            if (json && json.ok) { done(); return; }
+            var err = json && json.error ? String(json.error) : "";
+            if (!retried && (err === "too_fast" || err.indexOf("token_") === 0)) {
+              retried = true;
+              if (err !== "too_fast") fetchToken();
+              return attempt();
+            }
+            fallbackToWhatsApp();
+          });
+      }
+      attempt().catch(fallbackToWhatsApp);
     });
   }
 
