@@ -86,6 +86,22 @@ GARBAGE_PERFORMERS = "2–5"              # исполнителей в кома
 GARBAGE_LEGAL_ENTITIES = "Да"           # работаем с юрлицами и ИП
 GARBAGE_EXPERIENCE = "1–3 года"         # из «Меньше года» / «1–3 года» / «10 лет и больше»
 
+# Отделка фасадов — ещё одна категория со своим набором полей.
+# Значения взяты из справочника автозагрузки (см. комментарий к SERVICE_SUBTYPE):
+# GET /web/1/autoload/user-docs/category/77204/fields.
+FACADE_ADS = {"otdelka-fasadov"}
+FACADE_SUBTYPE = "Фасадные работы"
+FACADE_WORK = ["Монтаж", "Отделочные работы", "Ремонт", "Утепление"]
+FACADE_TYPE = ["Вентилируемые", "«Мокрый фасад»"]
+FACADE_MATERIALS = ["Виниловый сайдинг", "Металлический сайдинг", "Фасадные панели",
+                    "Клинкерная плитка", "Натуральный камень", "Искусственный камень"]
+FACADE_FINISHING = ["Штукатурные", "Облицовочные", "Покраска", "Грунтование", "Шпаклевание"]
+FACADE_REPAIR = ["Косметический", "Ремонт трещин"]
+FACADE_INSULATORS = ["Минеральная вата", "Пенополистирол", "Пеноплекс"]
+FACADE_MATERIAL_PURCHASE = "Возможна"      # Возможна | Нет
+FACADE_PAYMENT = ["Поэтапная", "Постоплата"]
+FACADE_WORK_WITH = ["Физические лица", "ИП", "ООО"]
+
 # Какие объекты указывать каждому объявлению.
 OBJECTS_BY_AD = {
     "ofis": OBJECTS_COMMERCIAL,
@@ -99,6 +115,42 @@ def options(tag, values):
     """Несколько значений одного параметра: Авито ждёт вложенные <Option>."""
     inner = "".join(f"<Option>{v}</Option>" for v in values)
     return f"<{tag}>{inner}</{tag}>"
+
+
+def facade_ad(ad, start, imgs):
+    """Объявление в категории «Фасадные работы» — свой набор полей."""
+    return f"""  <Ad>
+    <Id>{ad['id']}</Id>
+    <DateBegin>{start}</DateBegin>
+    <Category>{CATEGORY}</Category>
+    <ServiceType>{SERVICE_TYPE}</ServiceType>
+    <ServiceSubtype>{FACADE_SUBTYPE}</ServiceSubtype>
+    <Title>{escape(ad['title'])}</Title>
+    <Description><![CDATA[{description(ad)}]]></Description>
+    <Price>{ad['price']}</Price>
+    <Images>{imgs}
+    </Images>
+    <Address>Москва</Address>
+    <ContactPhone>{PHONE_RAW}</ContactPhone>
+    <ManagerName>Под Ноль</ManagerName>
+    {options("FacadeWork", FACADE_WORK)}
+    {options("FacadeType", FACADE_TYPE)}
+    {options("FacadeMaterials", FACADE_MATERIALS)}
+    {options("FinishingServices", FACADE_FINISHING)}
+    {options("TypesOfRepair", FACADE_REPAIR)}
+    {options("FacadeInsulators", FACADE_INSULATORS)}
+    <MaterialPurchase>{FACADE_MATERIAL_PURCHASE}</MaterialPurchase>
+    <WorkExperience>{WORK_EXPERIENCE}</WorkExperience>
+    {options("TeamSize", [TEAM_SIZE])}
+    <Guarantee>{GUARANTEE}</Guarantee>
+    <WorkWithContract>{WORK_WITH_CONTRACT}</WorkWithContract>
+    {options("WorkWith", FACADE_WORK_WITH)}
+    {options("Payment", FACADE_PAYMENT)}
+    <FreeConsultation>Есть</FreeConsultation>
+    {options("WorkDays", WORK_DAYS)}
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
+  </Ad>"""
 
 
 def garbage_ad(ad, start, imgs):
@@ -143,6 +195,9 @@ def build_xml(ads):
         objects = OBJECTS_BY_AD.get(ad["id"], OBJECTS_FLAT)
         if ad["id"] in GARBAGE_ADS:
             out.append(garbage_ad(ad, start, imgs))
+            continue
+        if ad["id"] in FACADE_ADS:
+            out.append(facade_ad(ad, start, imgs))
             continue
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>
