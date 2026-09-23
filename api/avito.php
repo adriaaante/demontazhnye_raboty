@@ -101,7 +101,6 @@ function avitoGet(string $url, string $token): ?array
         CURLOPT_TIMEOUT => 10,
     ]);
     $body = curl_exec($ch);
-    curl_close($ch);
     $data = is_string($body) ? json_decode($body, true) : null;
     return is_array($data) ? $data : null;
 }
@@ -128,7 +127,6 @@ function avitoToken(array $config): ?string
         CURLOPT_TIMEOUT => 10,
     ]);
     $body = curl_exec($ch);
-    curl_close($ch);
     $data = is_string($body) ? json_decode($body, true) : null;
     $token = is_array($data) ? (string)($data['access_token'] ?? '') : '';
     if ($token === '') {

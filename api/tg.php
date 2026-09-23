@@ -29,7 +29,6 @@ function tg_send(string $botToken, string $chatId, string $text): bool
             CURLOPT_TIMEOUT => 10,
         ]);
         $response = curl_exec($ch);
-        curl_close($ch);
     } else {
         $response = @file_get_contents($url, false, stream_context_create([
             'http' => [
