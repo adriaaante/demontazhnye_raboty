@@ -79,10 +79,12 @@ if (!hash_equals($hookKey, (string)($_GET['k'] ?? ''))) {
 
 // Авито ждёт быстрый 200 и повторяет доставку при любом другом ответе.
 // Отвечаем «ок» даже на то, что решили не пересылать, — иначе получим
-// бесконечные повторы одного и того же сообщения.
-function done(): void
+// бесконечные повторы одного и того же сообщения. Поле `result` Авито не
+// читает, оно для нас: по нему видно, ушло ли сообщение и какой фильтр его
+// остановил, — без логов на хостинге.
+function done(string $result): void
 {
-    echo json_encode(['ok' => true]);
+    echo json_encode(['ok' => true, 'result' => $result]);
     exit;
 }
 
@@ -139,12 +141,12 @@ function avitoToken(array $config): ?string
 $raw = (string)file_get_contents('php://input');
 $data = json_decode($raw, true);
 if (!is_array($data)) {
-    done();
+    done('bad_json');
 }
 
 $payload = $data['payload'] ?? [];
 if (($payload['type'] ?? '') !== 'message') {
-    done();                     // вебхук про что-то другое — не наше дело
+    done('not_message');        // вебхук про что-то другое — не наше дело
 }
 $m = $payload['value'] ?? [];
 
@@ -156,17 +158,17 @@ $type      = (string)($m['type'] ?? 'text');
 $text      = trim((string)($m['content']['text'] ?? ''));
 
 if ($authorId === AVITO_USER_ID || $authorId === 0) {
-    done();                     // свой ответ или системное сообщение Авито
+    done('own_or_system');      // свой ответ или системное сообщение Авито
 }
 if ($type === 'system' || $type === 'deleted') {
-    done();
+    done('system');
 }
 
 // Повторную доставку того же сообщения в чат не дублируем.
 if ($messageId !== '') {
     $seen = tmpPath('seen', $messageId);
     if (file_exists($seen)) {
-        done();
+        done('duplicate');
     }
     @touch($seen);
     if (random_int(1, 40) === 1) {
@@ -179,11 +181,11 @@ if ($messageId !== '') {
 }
 
 if (empty($config['avito_client_id']) || empty($config['avito_client_secret'])) {
-    done();                     // без доступа к API отличить своё от чужого нельзя
+    done('no_avito_keys');      // без доступа к API отличить своё от чужого нельзя
 }
 $token = avitoToken($config);
 if ($token === null) {
-    done();
+    done('avito_token_failed');
 }
 
 $chat = $chatId !== ''
@@ -194,7 +196,7 @@ $item = $chat['context']['value'] ?? [];
 // Главный фильтр: объявление должно быть нашим. Иначе это переписка, где мы
 // покупатель, — ей в рабочем чате не место.
 if ((int)($item['user_id'] ?? 0) !== AVITO_USER_ID) {
-    done();
+    done($chat === null ? 'chat_lookup_failed' : 'foreign_item');
 }
 
 $author = '';
@@ -249,5 +251,5 @@ if ($itemUrl !== '') {
 }
 $lines[] = 'Время: ' . $when->format('d.m.Y H:i');
 
-tg_send((string)$config['token'], (string)$config['chat_id'], implode("\n", $lines));
-done();
+$sent = tg_send((string)$config['token'], (string)$config['chat_id'], implode("\n", $lines));
+done($sent ? 'sent' : 'telegram_failed');
