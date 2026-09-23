@@ -3,3 +3,4 @@ api/config.php
 
 .DS_Store
 __pycache__/
+api/avito-config.php

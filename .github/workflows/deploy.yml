@@ -50,6 +50,8 @@ jobs:
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          AVITO_CLIENT_ID: ${{ secrets.AVITO_CLIENT_ID }}
+          AVITO_CLIENT_SECRET: ${{ secrets.AVITO_CLIENT_SECRET }}
         run: |
           if [ -z "$TG_BOT_TOKEN" ] || [ -z "$TG_CHAT_ID" ]; then
             echo "::warning::секреты TG_BOT_TOKEN / TG_CHAT_ID не заданы — заявки пойдут в WhatsApp"
@@ -62,8 +64,13 @@ jobs:
             echo "return ["
             echo "    'token' => '${TG_BOT_TOKEN}',"
             echo "    'chat_id' => '${TG_CHAT_ID}',"
+            echo "    'avito_client_id' => '${AVITO_CLIENT_ID}',"
+            echo "    'avito_client_secret' => '${AVITO_CLIENT_SECRET}',"
             echo "];"
           } > api/config.php
+          if [ -z "$AVITO_CLIENT_ID" ] || [ -z "$AVITO_CLIENT_SECRET" ]; then
+            echo "::warning::секреты AVITO_CLIENT_ID / AVITO_CLIENT_SECRET не заданы — мост Авито→Telegram молчит"
+          fi
           echo "конфиг создан"
 
       - name: Залить на хостинг по FTP
