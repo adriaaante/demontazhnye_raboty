@@ -189,8 +189,13 @@ def build_xml(ads):
     out = ['<?xml version="1.0" encoding="UTF-8"?>',
            '<Ads formatVersion="3" target="Avito.ru">']
     for ad in ads:
+        # Авито не перечитывает картинку, если адрес не изменился: подменённый
+        # по тому же пути файл в объявление не попадёт, выгрузка отчитается
+        # «Без изменений». Поэтому у переснятых картинок в имени есть ревизия.
+        rev = ad.get("img_rev")
+        suffix = f"-r{rev}" if rev else ""
         imgs = "".join(
-            f'\n      <Image url="{SITE}/avito/img/{ad["id"]}-{n}.jpg"/>'
+            f'\n      <Image url="{SITE}/avito/img/{ad["id"]}-{n}{suffix}.jpg"/>'
             for n in (1, 2))
         objects = OBJECTS_BY_AD.get(ad["id"], OBJECTS_FLAT)
         if ad["id"] in GARBAGE_ADS:
