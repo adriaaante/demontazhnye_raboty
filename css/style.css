@@ -505,6 +505,18 @@ h1, h2, h3 {
   border-left: 1px solid var(--line);
 }
 
+/* Карточки-ссылки на отдельные страницы услуг — по две в ряд. Правило стоит
+   до медиазапросов, чтобы на узких экранах сетка так же сложилась в колонку. */
+.services-grid--two { grid-template-columns: repeat(2, 1fr); }
+.service--link { color: inherit; }
+.service--link h3::after {
+  content: "\00a0→";
+  color: var(--accent);
+  display: inline-block;
+  transition: transform .3s var(--ease);
+}
+.service--link:hover h3::after { transform: translateX(6px); }
+
 .service {
   padding: clamp(28px, 2.8vw, 44px);
   border-right: 1px solid var(--line);

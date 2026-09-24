@@ -102,6 +102,15 @@ FACADE_MATERIAL_PURCHASE = "Возможна"      # Возможна | Нет
 FACADE_PAYMENT = ["Поэтапная", "Постоплата"]
 FACADE_WORK_WITH = ["Физические лица", "ИП", "ООО"]
 
+# Уборка снега с крыш — «Ремонт и отделка» → «Высотные работы»: там, а не в
+# «Уборке», лежат объявления «Очистка крыш от снега и сосулек» у конкурентов.
+# Обязательные поля подобраны по валидатору Авито; SNOW_SPECIALTY — значение
+# поля «Чем вы занимаетесь» из справочника автозагрузки (узел 66892).
+SNOW_ADS = {"uborka-snega-krysha"}
+SNOW_SERVICE_TYPE = "Ремонт и отделка"
+SNOW_SUBTYPE = "Высотные работы"
+SNOW_SPECIALTY = []                 # заполняется из справочника, см. выше
+
 # Какие объекты указывать каждому объявлению.
 OBJECTS_BY_AD = {
     "ofis": OBJECTS_COMMERCIAL,
@@ -153,6 +162,34 @@ def facade_ad(ad, start, imgs):
   </Ad>"""
 
 
+def snow_ad(ad, start, imgs):
+    """Объявление в категории «Высотные работы» — свой набор полей."""
+    return f"""  <Ad>
+    <Id>{ad['id']}</Id>
+    <DateBegin>{start}</DateBegin>
+    <Category>{CATEGORY}</Category>
+    <ServiceType>{SNOW_SERVICE_TYPE}</ServiceType>
+    <ServiceSubtype>{SNOW_SUBTYPE}</ServiceSubtype>
+    <Title>{escape(ad['title'])}</Title>
+    <Description><![CDATA[{description(ad)}]]></Description>
+    <Price>{ad['price']}</Price>
+    <Images>{imgs}
+    </Images>
+    <Address>Москва</Address>
+    <ContactPhone>{PHONE_RAW}</ContactPhone>
+    <ManagerName>Под Ноль</ManagerName>
+    {options("Specialty", SNOW_SPECIALTY)}
+    <MaterialPurchase>Возможна</MaterialPurchase>
+    <WorkExperience>{WORK_EXPERIENCE}</WorkExperience>
+    {options("TeamSize", [TEAM_SIZE])}
+    <Guarantee>{GUARANTEE}</Guarantee>
+    <WorkWithContract>{WORK_WITH_CONTRACT}</WorkWithContract>
+    {options("WorkDays", WORK_DAYS)}
+    <WorkTimeFrom>08:00</WorkTimeFrom>
+    <WorkTimeTo>22:00</WorkTimeTo>
+  </Ad>"""
+
+
 def garbage_ad(ad, start, imgs):
     """Объявление в категории «Вывоз мусора и вторсырья» — свой набор полей."""
     return f"""  <Ad>
@@ -177,8 +214,13 @@ def garbage_ad(ad, start, imgs):
 
 
 def description(ad):
-    """Полный текст объявления: лид + подробности + общий хвост."""
-    return f"{ad['lead']}\n\n{ad['body'].strip()}\n{TAIL.rstrip()}"
+    """Полный текст объявления: лид + подробности + хвост.
+
+    Общий хвост написан под демонтаж (подъезд, лифт, талоны на мусор) — у
+    объявлений других услуг он свой, в ключе tail.
+    """
+    tail = ad.get("tail", TAIL)
+    return f"{ad['lead']}\n\n{ad['body'].strip()}\n{tail.rstrip()}"
 
 
 def build_xml(ads):
@@ -203,6 +245,9 @@ def build_xml(ads):
             continue
         if ad["id"] in FACADE_ADS:
             out.append(facade_ad(ad, start, imgs))
+            continue
+        if ad["id"] in SNOW_ADS:
+            out.append(snow_ad(ad, start, imgs))
             continue
         out.append(f"""  <Ad>
     <Id>{ad['id']}</Id>

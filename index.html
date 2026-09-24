@@ -48,7 +48,9 @@
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Демонтаж стен и перегородок", "serviceType": "Снос стен и перегородок", "description": "Кирпич, пеноблок, гипсокартон, сантехкабины. Аккуратная резка проёмов без повреждения несущих конструкций.", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Демонтаж стяжки и полов", "serviceType": "Демонтаж напольных покрытий", "description": "Цементная стяжка, плитка, паркет, ламинат, лаги. Вынос и вывоз в тот же день.", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Демонтаж в офисах и коммерческих помещениях", "serviceType": "Демонтаж офисных помещений", "description": "Перегородки, потолки армстронг, фальшполы, инженерия. Работаем ночью и в выходные — без остановки бизнес-центра.", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Вывоз и утилизация строительного мусора", "serviceType": "Вывоз строительного мусора", "description": "Контейнеры 8–27 м³, погрузка, талоны на утилизацию. Мусор не остаётся у подъезда ни на день.", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } }
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Вывоз и утилизация строительного мусора", "serviceType": "Вывоз строительного мусора", "description": "Контейнеры 8–27 м³, погрузка, талоны на утилизацию. Мусор не остаётся у подъезда ни на день.", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } },
+        { "@type": "Offer", "priceSpecification": { "@type": "PriceSpecification", "minPrice": 100000, "priceCurrency": "RUB" }, "itemOffered": { "@type": "Service", "name": "Отделка фасадов", "serviceType": "Отделка фасадов частных домов и зданий", "url": "https://xn--d1aofccc0h.xn--p1ai/otdelka-fasadov.html", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } },
+        { "@type": "Offer", "priceSpecification": { "@type": "UnitPriceSpecification", "minPrice": 40, "priceCurrency": "RUB", "unitText": "м²" }, "itemOffered": { "@type": "Service", "name": "Уборка снега с крыш", "serviceType": "Очистка кровли от снега и наледи", "url": "https://xn--d1aofccc0h.xn--p1ai/uborka-snega-s-kryshi.html", "areaServed": "Москва и Московская область", "provider": { "@id": "https://xn--d1aofccc0h.xn--p1ai/#org" } } }
       ]
     }
   }
@@ -216,6 +218,31 @@
             <p>Цена зависит от площади, материала стен и объёма мусора. Пришлите фото или видео помещения в WhatsApp — за час посчитаем смету. Цифра из сметы фиксируется в договоре и не меняется.</p>
           </div>
           <a class="btn" href="#contacts" data-modal-open="Рассчитать стоимость">Рассчитать стоимость</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="more-services">
+      <div class="container">
+        <div class="section__head reveal">
+          <div>
+            <span class="section-label">Ещё мы делаем</span>
+            <h2 class="section-title">Фасады и крыши — той же бригадой, по договору</h2>
+          </div>
+        </div>
+        <div class="services-grid services-grid--two">
+          <a class="service service--link reveal" href="otdelka-fasadov.html">
+            <span class="service__num">Фасады</span>
+            <h3>Отделка фасадов</h3>
+            <p>Штукатурка и «мокрый фасад», покраска, утепление, облицовка панелями, клинкером и камнем. Частные дома, коттеджи и здания в Москве и области.</p>
+            <dl class="service__meta"><dt>Цена</dt><dd>от 100 000 ₽ за объект</dd></dl>
+          </a>
+          <a class="service service--link reveal" href="uborka-snega-s-kryshi.html">
+            <span class="service__num">Зима</span>
+            <h3>Уборка снега с крыш</h3>
+            <p>Сбрасываем снег, сбиваем сосульки и наледь со скатных и плоских кровель. Работаем на страховке, деревянными лопатами — покрытие остаётся целым.</p>
+            <dl class="service__meta"><dt>Цена</dt><dd>от 40 ₽/м²</dd></dl>
+          </a>
         </div>
       </div>
     </section>
@@ -393,6 +420,8 @@
           <a href="#process">Как работаем</a>
           <a href="#faq">Вопросы</a>
           <a href="#contacts">Контакты</a>
+          <a href="otdelka-fasadov.html">Отделка фасадов</a>
+          <a href="uborka-snega-s-kryshi.html">Уборка снега с крыш</a>
           <a href="privacy.html">Политика конфиденциальности</a>
         </nav>
         <div class="footer__contact">

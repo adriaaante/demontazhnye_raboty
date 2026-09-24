@@ -94,6 +94,13 @@ body {{ font-family: M, Arial, sans-serif; background:#111; }}
 .row .tx i {{ display:block; color:#9A9A9A; font-size:23px; font-weight:400;
   font-style:normal; margin-top:3px; }}
 
+/* Длинный заголовок переносится на две строки, и без поджатия нижняя строка
+   «Ответим за 15 минут» упирается в край карточки. */
+.terms.long h1 {{ font-size:40px; margin-top:20px; }}
+.terms.long .big {{ margin:10px 0 2px; }}
+.terms.long .big .num {{ font-size:110px; }}
+.terms.long .note {{ font-size:22px; }}
+.terms.long .rows {{ gap:11px; margin:8px 0; }}
 .terms .foot {{ border-top:2px solid #2C2C2C; padding-top:22px;
   display:flex; align-items:center; justify-content:space-between; }}
 .terms .foot .call {{ color:#fff; font-size:30px; font-weight:700; }}
@@ -112,6 +119,31 @@ def price_html(ad, cls=""):
         return (f'<span class="from">от</span><span class="num">{num}</span>'
                 f'<span class="unit">{ad["unit"]}</span>')
     return '<span class="ask">Цена по объёму<br>считаем бесплатно</span>'
+
+
+# Плашки и строки условий по умолчанию написаны под демонтаж. Объявление
+# другой услуги (снег, фасады) задаёт свои через ключи perks / card_rows —
+# иначе на карточке про снег окажется «вывоз мусора с талонами».
+PERKS = ["Договоримся по цене", "Скидка на объём", "Вывоз мусора", "Договор"]
+CARD_ROWS = [
+    ("%", "Скидки на объём и комплекс", "Чем больше работ берём — тем ниже цена за метр"),
+    ("₽", "Договоримся по цене", "Назовите свою — если она в рынке, согласуем"),
+    ("1ч", "Смета по фото за час", "Пришлите фото помещения — посчитаем бесплатно"),
+    ("✓", "Фиксируем цену в договоре", "В процессе не растёт, вывоз мусора с талонами"),
+]
+
+
+def perks_html(ad):
+    perks = ad.get("perks", PERKS)
+    return "".join(
+        f'<div class="perk{" hot" if i == 0 else ""}">{p}</div>' for i, p in enumerate(perks))
+
+
+def rows_html(ad):
+    return "".join(
+        f'<div class="row"><div class="ic">{ic}</div><div class="tx">{title}'
+        f'<i>{sub}</i></div></div>'
+        for ic, title, sub in ad.get("card_rows", CARD_ROWS))
 
 
 def build(ad):
@@ -134,18 +166,14 @@ def build(ad):
   <div class="bottom">
     <div class="price">{price_html(ad)}</div>
     <div class="title">{ad['title']}</div>
-    <div class="perks">
-      <div class="perk hot">Договоримся по цене</div>
-      <div class="perk">Скидка на объём</div>
-      <div class="perk">Вывоз мусора</div>
-      <div class="perk">Договор</div>
-    </div>
+    <div class="perks">{perks_html(ad)}</div>
     <div class="cta">Пишите или звоните — <span>ответим за 15 минут</span>,
       смета по фото за час</div>
   </div>
 </div>"""
 
-    terms = f"""<div class="card terms">
+    long = " long" if len(ad["title"]) > 36 else ""
+    terms = f"""<div class="card terms{long}">
   <div>
     <div class="head">
       <div class="logo">{LOGO}<b>Под Ноль</b></div>
@@ -157,16 +185,7 @@ def build(ad):
       Всегда обсуждаем: на большой объём и комплекс работ даём скидку.</div>
   </div>
 
-  <div class="rows">
-    <div class="row"><div class="ic">%</div><div class="tx">Скидки на объём и комплекс
-      <i>Чем больше работ берём — тем ниже цена за метр</i></div></div>
-    <div class="row"><div class="ic">₽</div><div class="tx">Договоримся по цене
-      <i>Назовите свою — если она в рынке, согласуем</i></div></div>
-    <div class="row"><div class="ic">1ч</div><div class="tx">Смета по фото за час
-      <i>Пришлите фото помещения — посчитаем бесплатно</i></div></div>
-    <div class="row"><div class="ic">✓</div><div class="tx">Фиксируем цену в договоре
-      <i>В процессе не растёт, вывоз мусора с талонами</i></div></div>
-  </div>
+  <div class="rows">{rows_html(ad)}</div>
 
   <div class="foot">
     <div class="call">Пишите в сообщения или звоните<i>Ответим за 15 минут</i></div>
