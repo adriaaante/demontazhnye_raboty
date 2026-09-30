@@ -226,10 +226,19 @@ if (function_exists('mb_substr')) {
 
 $title = trim((string)($item['title'] ?? ''));
 $price = trim((string)($item['price_string'] ?? ''));
-$itemUrl = trim((string)($item['url'] ?? ''));
-if ($itemUrl === '' && $itemId > 0) {
-    $itemUrl = 'https://www.avito.ru/items/' . $itemId;
+// Ссылку на объявление берём из API объявлений, а не из чата: мессенджер
+// отдаёт адрес без www (https://avito.ru/moskva/...), и по нему Авито
+// показывает «Объявление закрыто» даже для активного объявления.
+$itemId = (int)($item['id'] ?? $itemId);
+$itemUrl = '';
+if ($itemId > 0) {
+    $info = avitoGet('https://api.avito.ru/core/v1/accounts/' . AVITO_USER_ID . '/items/' . $itemId . '/', $token);
+    $itemUrl = trim((string)($info['url'] ?? ''));
 }
+if ($itemUrl === '') {
+    $itemUrl = trim((string)($item['url'] ?? ''));
+}
+$itemUrl = (string)preg_replace('~^https?://(m\.)?avito\.ru/~', 'https://www.avito.ru/', $itemUrl);
 
 $when = (new DateTimeImmutable('@' . (int)($m['created'] ?? time())))
     ->setTimezone(new DateTimeZone('Europe/Moscow'));
