@@ -111,6 +111,15 @@
   `favicon.svg`. Название «Под Ноль» = отраслевой термин «демонтаж под ноль».
 
 ## Деплой
+- **Доступы в облачной сессии** (переменные окружения claude.ai/code, значения
+  только там, в репо — никогда): `BEGET_ARSENIY_LOGIN` / `BEGET_ARSENIY_API_PASSWORD`
+  — API Beget (`api.beget.com`, весь аккаунт dudareid: сайты, домены, DNS, FTP,
+  почта, MySQL, cron, бэкапы; файлов API не читает); `VOIDAFORM_TG_BOT_TOKEN` /
+  `VOIDAFORM_TG_CHAT_ID` — `@voidaform_bot` и группа «Void&Form», куда падают
+  заявки обоих сайтов и сообщения Авито; `PODNOL_AVITO_CLIENT_ID` /
+  `PODNOL_AVITO_CLIENT_SECRET` — API Авито «Под Ноль» (аккаунт 429115960).
+  Из контейнера наружу только HTTPS: FTP (21) и SSH (22) закрыты, выкладка — только
+  через GitHub Actions. Проверено 04.10.2026.
 - **Боевой домен — подноль.рф** (punycode `xn--d1aofccc0h.xn--p1ai`), куплен
   17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
   sitemap/robots указывают на punycode-домен.
