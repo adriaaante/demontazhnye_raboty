@@ -1,0 +1,30 @@
+name: Проверка сайта
+
+# Каждые 3 часа проверяет живой сайт (scripts/check_live.sh) и при сбое пишет
+# владельцу в личку от бота сайта. Кнопка «Run workflow» — проверить вручную.
+# GitHub отключает расписание в публичном репозитории после 60 дней без
+# коммитов — тогда включить заново на вкладке Actions.
+on:
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверить сайт
+        run: PROBLEMS_FILE=problems.txt bash scripts/check_live.sh
+      - name: Сообщить владельцу
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_OWNER_CHAT_ID: ${{ secrets.TG_OWNER_CHAT_ID }}
+        run: |
+          [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_OWNER_CHAT_ID" ] || exit 0
+          text="⚠️ подноль.рф: проверка сайта нашла сбой
+          $(cat problems.txt 2>/dev/null)
+          ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          curl -sS -m 20 "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="$TG_OWNER_CHAT_ID" --data-urlencode text="$text" > /dev/null

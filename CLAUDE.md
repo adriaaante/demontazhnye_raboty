@@ -38,14 +38,20 @@
 - `js/main.js` — копия voidaform (меню, модалка, fab, формы); телефон и подпись
   заявки заменены. Формы шлют POST на `data-endpoint` (`api/lead.php`),
   при недоступности (на GitHub Pages PHP нет) открывают WhatsApp — это штатный путь.
-- **Заявки идут через общий обработчик voidaform**: у форм
-  `data-endpoint="https://voidaform.ru/api/lead.php"` + скрытое поле
-  `site=подноль.рф` — заявка падает в тот же Telegram-чат с пометкой сайта.
-  CORS-допуск домена прописан в `api/lead.php` репозитория voidaform.ru
-  (allowlist: подноль.рф в punycode + adriaaante.github.io). Секреты
-  Локальный `api/lead.php` — резерв на случай, если сайты разъедутся
-  по ботам; держать копией файла из voidaform.ru, вместе с `api/tg.php`
-  (без него он падает с фатальной ошибкой).
+- **Заявки — свой обработчик `api/lead.php` и свой бот «Под Ноль»** (с 11.10.2026;
+  до этого формы слали на voidaform.ru). Группа в Telegram общая с voidaform.ru
+  («Void&Form», оба бота в ней). `lead.php` и `tg.php` — **один и тот же файл** в
+  обоих репозиториях: всё, что отличается у сайтов (домены CORS `origins`, подпись
+  `site`, бот, `owner_chat_id`), лежит в `api/config.php`, который собирает выкладка.
+  Правишь файл — копируй во второй репо. Формы: `data-endpoint="api/lead.php"`
+  (на 404 — `/api/lead.php`); на GitHub Pages PHP нет — там уходит в WhatsApp.
+- **Оповещения владельцу** (`tg_alert` в `api/tg.php`) — в личку Adrian от бота
+  сайта: заявка не дошла до группы (приходит сама заявка), сбои моста Авито (нет
+  ключей/токена, API не отдал чат, сообщение не дошло — тогда оно само). Один вид
+  сбоя — не чаще раза в 30 мин (файлы `vf-alert-*` в temp). Плюс GitHub: упала
+  выкладка; `health.yml` раз в 3 часа гоняет `scripts/check_live.sh` (главная,
+  токен `lead.php`, `avito.php` → 404, фид Авито). Секрет `TG_OWNER_CHAT_ID`;
+  без него оповещения молчат. Расписание GitHub отключает после 60 дней без коммитов.
 - **PHP на подноль.рф — 8.5** (у voidaform.ru — 8.3). Версия задаётся в панели
   Beget для каждого сайта отдельно; до 23.09.2026 здесь стояла 5.6, и весь наш
   PHP падал с пустым 500 (типизированные аргументы, `??`, стрелочные функции).
@@ -115,8 +121,10 @@
   только там, в репо — никогда): `BEGET_ARSENIY_LOGIN` / `BEGET_ARSENIY_API_PASSWORD`
   — API Beget (`api.beget.com`, весь аккаунт dudareid: сайты, домены, DNS, FTP,
   почта, MySQL, cron, бэкапы; файлов API не читает); `VOIDAFORM_TG_BOT_TOKEN` /
-  `VOIDAFORM_TG_CHAT_ID` — `@voidaform_bot` и группа «Void&Form», куда падают
-  заявки обоих сайтов и сообщения Авито; `PODNOL_AVITO_CLIENT_ID` /
+  `VOIDAFORM_TG_CHAT_ID` — `@voidaform_bot` и группа «Void&Form» (общая для
+  обоих сайтов); `PODNOL_TG_BOT_TOKEN` — бот «Под Ноль» (заявки подноль.рф и
+  сообщения Авито); `FUTUREFLOW_OWNER_CHAT_ID` — личка владельца для оповещений;
+  `PODNOL_AVITO_CLIENT_ID` /
   `PODNOL_AVITO_CLIENT_SECRET` — API Авито «Под Ноль» (аккаунт 429115960).
   Из контейнера наружу только HTTPS: FTP (21) и SSH (22) закрыты, выкладка — только
   через GitHub Actions. Проверено 04.10.2026.
@@ -126,8 +134,11 @@
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
   (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/
   `FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
-  подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке) и опционально
-  `TG_BOT_TOKEN`/`TG_CHAT_ID` для Telegram-заявок. Пока секретов нет, воркфлоу
+  подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке),
+  `TG_BOT_TOKEN` (бот «Под Ноль»), `TG_CHAT_ID` (общая группа), `TG_OWNER_CHAT_ID`.
+  После заливки шаг «Проверить обработчики» гоняет `scripts/check_live.sh`.
+  **Ключ вебхука Авито выводится из токена бота** — сменил `TG_BOT_TOKEN` →
+  после выкладки переподпиши вебхук на новый адрес (`avito.php?setup=<токен>`). Пока секретов нет, воркфлоу
   мягко пропускает выкладку (warning, не ошибка).
 - `.htaccess` — https, без www, запрет config.php, кэш и gzip.
 - GitHub Pages (`pages.yml`) оставлен как стейджинг:

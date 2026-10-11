@@ -45,11 +45,15 @@ jobs:
       # Токен бота и id чата не хранятся в репозитории: конфиг обработчика
       # заявок собирается здесь из секретов и уезжает на хостинг вместе с сайтом.
       # Пока секретов нет — форма работает через запасной путь WhatsApp.
+      # Бот — свой у подноль.рф («Под Ноль»), группа общая с voidaform.ru.
+      # TG_OWNER_CHAT_ID — личка владельца: туда уходят сообщения о сбоях.
       - name: Собрать конфиг Telegram-бота
+        id: cfg
         if: steps.gate.outputs.ready == 'true'
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TG_OWNER_CHAT_ID: ${{ secrets.TG_OWNER_CHAT_ID }}
           AVITO_CLIENT_ID: ${{ secrets.AVITO_CLIENT_ID }}
           AVITO_CLIENT_SECRET: ${{ secrets.AVITO_CLIENT_SECRET }}
         run: |
@@ -64,6 +68,9 @@ jobs:
             echo "return ["
             echo "    'token' => '${TG_BOT_TOKEN}',"
             echo "    'chat_id' => '${TG_CHAT_ID}',"
+            echo "    'owner_chat_id' => '${TG_OWNER_CHAT_ID}',"
+            echo "    'site' => 'подноль.рф',"
+            echo "    'origins' => ['https://xn--d1aofccc0h.xn--p1ai'],"
             echo "    'avito_client_id' => '${AVITO_CLIENT_ID}',"
             echo "    'avito_client_secret' => '${AVITO_CLIENT_SECRET}',"
             echo "];"
@@ -71,6 +78,8 @@ jobs:
           if [ -z "$AVITO_CLIENT_ID" ] || [ -z "$AVITO_CLIENT_SECRET" ]; then
             echo "::warning::секреты AVITO_CLIENT_ID / AVITO_CLIENT_SECRET не заданы — мост Авито→Telegram молчит"
           fi
+          [ -n "$TG_OWNER_CHAT_ID" ] || echo "::warning::секрет TG_OWNER_CHAT_ID не задан — о сбоях никто не узнает"
+          echo "built=true" >> "$GITHUB_OUTPUT"
           echo "конфиг создан"
 
       - name: Залить на хостинг по FTP
@@ -90,3 +99,21 @@ jobs:
             scripts/**
             CLAUDE.md
             **/.DS_Store
+
+      # Сайт залит — убеждаемся, что обработчики живые: lead.php выдаёт токен
+      # формы (значит, конфиг на месте и PHP не падает), avito.php без ключа
+      # отвечает 404 (а не 500 «не настроен»).
+      - name: Проверить обработчики на живом сайте
+        if: steps.cfg.outputs.built == 'true'
+        run: bash scripts/check_live.sh
+
+      - name: Сообщить владельцу, что выкладка упала
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_OWNER_CHAT_ID: ${{ secrets.TG_OWNER_CHAT_ID }}
+        run: |
+          [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_OWNER_CHAT_ID" ] || exit 0
+          curl -sS -m 20 "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="$TG_OWNER_CHAT_ID" \
+            --data-urlencode text="⚠️ подноль.рф: выкладка упала — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > /dev/null

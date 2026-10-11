@@ -1,7 +1,7 @@
 <?php
 /**
- * Мост «Авито → Telegram»: сообщения клиентов из чатов Авито падают в тот же
- * чат, куда идут заявки с сайтов voidaform.ru и подноль.рф.
+ * Мост «Авито → Telegram»: сообщения клиентов из чатов Авито падают в рабочую
+ * группу от бота «Под Ноль» — того же, что принимает заявки с сайта подноль.рф.
  *
  * Авито шлёт сюда вебхук на каждое сообщение в мессенджере аккаунта. Адрес
  * подписки — этот файл с ключом в запросе (`?k=…`): Авито вебхуки не
@@ -180,11 +180,15 @@ if ($messageId !== '') {
     }
 }
 
+// Сбои ниже — повод написать владельцу: сообщение клиента в группу не попадёт.
+// tg_alert сам не даёт одному и тому же сбою писать чаще раза в 30 минут.
 if (empty($config['avito_client_id']) || empty($config['avito_client_secret'])) {
+    tg_alert($config, 'avito-keys', 'мост Авито молчит: в конфиге нет ключей Авито (секреты AVITO_CLIENT_ID / AVITO_CLIENT_SECRET).');
     done('no_avito_keys');      // без доступа к API отличить своё от чужого нельзя
 }
 $token = avitoToken($config);
 if ($token === null) {
+    tg_alert($config, 'avito-token', 'мост Авито: не получить токен Авито — ключи отозваны или API недоступен. Сообщения клиентов в группу не идут.');
     done('avito_token_failed');
 }
 
@@ -196,7 +200,11 @@ $item = $chat['context']['value'] ?? [];
 // Главный фильтр: объявление должно быть нашим. Иначе это переписка, где мы
 // покупатель, — ей в рабочем чате не место.
 if ((int)($item['user_id'] ?? 0) !== AVITO_USER_ID) {
-    done($chat === null ? 'chat_lookup_failed' : 'foreign_item');
+    if ($chat === null) {
+        tg_alert($config, 'avito-chat', 'мост Авито: API не отдал чат ' . $chatId . ' — сообщение не переслано, проверьте мессенджер Авито.');
+        done('chat_lookup_failed');
+    }
+    done('foreign_item');
 }
 
 $author = '';
@@ -261,4 +269,8 @@ if ($itemUrl !== '') {
 $lines[] = 'Время: ' . $when->format('d.m.Y H:i');
 
 $sent = tg_send((string)$config['token'], (string)$config['chat_id'], implode("\n", $lines));
+if (!$sent) {
+    // Группа не приняла — само сообщение владельцу, чтобы клиент не потерялся.
+    tg_alert($config, 'avito-send', "сообщение с Авито не дошло до группы, вот оно:\n\n" . implode("\n", $lines), false);
+}
 done($sent ? 'sent' : 'telegram_failed');

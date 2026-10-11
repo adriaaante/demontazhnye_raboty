@@ -23,13 +23,18 @@
 
 declare(strict_types=1);
 
-// Обработчик общий для двух сайтов: voidaform.ru и подноль.рф (заявки идут
-// в один Telegram-чат). Чужим доменам браузер ответ не отдаст.
-$allowedOrigins = [
-    'https://voidaform.ru',
-    'https://xn--d1aofccc0h.xn--p1ai',      // подноль.рф
-    'https://adriaaante.github.io',          // стейджинг подноль.рф на GitHub Pages
-];
+require __DIR__ . '/tg.php';
+
+$configFile = __DIR__ . '/config.php';
+$config = is_readable($configFile) ? require $configFile : null;
+
+// Файл одинаковый у voidaform.ru и подноль.рф: у каждого сайта свой бот и
+// свой конфиг. Чьи страницы принимаем и как подписать заявку — тоже из
+// конфига (его собирает выкладка); без этих полей — настройки voidaform.ru.
+// Чужим доменам браузер ответ не отдаст.
+$allowedOrigins = is_array($config) && !empty($config['origins'])
+    ? (array)$config['origins']
+    : ['https://voidaform.ru'];
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
 if (in_array($origin, $allowedOrigins, true)) {
     header('Access-Control-Allow-Origin: ' . $origin);
@@ -60,8 +65,6 @@ if ($method !== 'POST' && !($method === 'GET' && isset($_GET['token']))) {
     reply(false, 'method_not_allowed', 405);
 }
 
-$configFile = __DIR__ . '/config.php';
-$config = is_readable($configFile) ? require $configFile : null;
 if (!is_array($config) || empty($config['token']) || empty($config['chat_id'])) {
     reply(false, 'not_configured', 500);
 }
@@ -187,7 +190,7 @@ $source  = $clean((string)($_POST['source'] ?? ''), 140);
 $page    = $clean((string)($_POST['page'] ?? ''), 200);
 $site    = $clean((string)($_POST['site'] ?? ''), 60);
 if ($site === '') {
-    $site = 'voidaform.ru';
+    $site = (string)($config['site'] ?? 'voidaform.ru');
 }
 
 if ($name === '' || $phone === '') {
@@ -241,41 +244,13 @@ $text = "Заявка с сайта {$site}\n\n"
     . ($message !== '' ? "О проекте: {$message}\n" : '')
     . ($source !== '' ? "Откуда: {$source}\n" : '')
     . ($page !== '' ? "Страница: {$page}\n" : '')
-    . 'Время: ' . date('d.m.Y H:i');
+    . 'Время: ' . (new DateTimeImmutable('now', new DateTimeZone('Europe/Moscow')))->format('d.m.Y H:i');
 
-$payload = http_build_query([
-    'chat_id' => $config['chat_id'],
-    'text' => $text,
-    'disable_web_page_preview' => 'true',
-]);
-$url = 'https://api.telegram.org/bot' . $config['token'] . '/sendMessage';
-
-$response = false;
-if (function_exists('curl_init')) {
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 10,
-    ]);
-    $response = curl_exec($ch);
-    curl_close($ch);
-} else {
-    $response = @file_get_contents($url, false, stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
-            'content' => $payload,
-            'timeout' => 10,
-            'ignore_errors' => true,
-        ],
-    ]));
-}
-
-$result = is_string($response) ? json_decode($response, true) : null;
-if (!is_array($result) || empty($result['ok'])) {
-    // не получилось — фронт откроет WhatsApp как запасной путь
+if (!tg_send((string)$config['token'], (string)$config['chat_id'], $text)) {
+    // Группа не приняла (бота убрали из чата, чат пересоздали…). Заявку
+    // целиком — владельцу в личку, чтобы не потерялась; фронт тем временем
+    // откроет человеку WhatsApp как запасной путь.
+    tg_alert($config, 'lead', "заявка не дошла до группы, вот она:\n\n" . $text, false);
     reply(false, 'telegram_error', 502);
 }
 
