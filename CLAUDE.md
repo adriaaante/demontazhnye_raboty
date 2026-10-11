@@ -50,7 +50,7 @@
   ключей/токена, API не отдал чат, сообщение не дошло — тогда оно само). Один вид
   сбоя — не чаще раза в 30 мин (файлы `vf-alert-*` в temp). Плюс GitHub: упала
   выкладка; `health.yml` раз в 3 часа гоняет `scripts/check_live.sh` (главная,
-  токен `lead.php`, `avito.php` → 404, фид Авито). Секрет `TG_OWNER_CHAT_ID`;
+  токен `lead.php`, `avito.php` → 404, фид Авито). Секрет `FUTUREFLOW_OWNER_CHAT_ID`;
   без него оповещения молчат. Расписание GitHub отключает после 60 дней без коммитов.
 - **PHP на подноль.рф — 8.5** (у voidaform.ru — 8.3). Версия задаётся в панели
   Beget для каждого сайта отдельно; до 23.09.2026 здесь стояла 5.6, и весь наш
@@ -74,9 +74,9 @@
     автоответы «Ассистента Авито» пропускаем.
   - Чтобы отличить своё объявление от чужого и подставить имя клиента, нужен
     токен Авито: `avito_client_id` / `avito_client_secret` в `api/config.php`
-    (секреты `AVITO_CLIENT_ID` / `AVITO_CLIENT_SECRET` этого репозитория —
+    (секреты `PODNOL_AVITO_CLIENT_ID` / `PODNOL_AVITO_CLIENT_SECRET` этого репозитория —
     заданы 23.09.2026; но конфиг собирается, только если есть и
-    `TG_BOT_TOKEN` / `TG_CHAT_ID`, без них шаг выходит раньше),
+    `PODNOL_TG_BOT_TOKEN` / `PODNOL_TG_CHAT_ID`, без них шаг выходит раньше),
     либо, если секретов нет, `api/avito-config.php` — файл, положенный на
     хостинг руками; выкладка его не трогает. Без ключей мост отвечает Авито
     «ок», но молчит.
@@ -117,6 +117,9 @@
   `favicon.svg`. Название «Под Ноль» = отраслевой термин «демонтаж под ноль».
 
 ## Деплой
+- **Секреты GitHub — с префиксом проекта** (`PODNOL_FTP_*`, `PODNOL_TG_*`, `PODNOL_AVITO_*`; личка владельца —
+  `FUTUREFLOW_OWNER_CHAT_ID`, как в окружении сессии), решение Adrian 11.10.2026. Старые имена
+  без префикса удалены — воркфлоу их не читают.
 - **Доступы в облачной сессии** (переменные окружения claude.ai/code, значения
   только там, в репо — никогда): `BEGET_ARSENIY_LOGIN` / `BEGET_ARSENIY_API_PASSWORD`
   — API Beget (`api.beget.com`, весь аккаунт dudareid: сайты, домены, DNS, FTP,
@@ -132,12 +135,11 @@
   17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
   sitemap/robots указывают на punycode-домен.
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
-  (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/
-  `FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
+  (как у voidaform). Требует секретов репо `PODNOL_FTP_SERVER`/`_USERNAME`/`_PASSWORD`/`_DIR` (свой FTP-аккаунт, привязанный к папке сайта
   подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке),
-  `TG_BOT_TOKEN` (бот «Под Ноль»), `TG_CHAT_ID` (общая группа), `TG_OWNER_CHAT_ID`.
+  `PODNOL_TG_BOT_TOKEN` (бот «Под Ноль»), `PODNOL_TG_CHAT_ID` (общая группа), `FUTUREFLOW_OWNER_CHAT_ID`.
   После заливки шаг «Проверить обработчики» гоняет `scripts/check_live.sh`.
-  **Ключ вебхука Авито выводится из токена бота** — сменил `TG_BOT_TOKEN` →
+  **Ключ вебхука Авито выводится из токена бота** — сменил `PODNOL_TG_BOT_TOKEN` →
   после выкладки переподпиши вебхук на новый адрес (`avito.php?setup=<токен>`). Пока секретов нет, воркфлоу
   мягко пропускает выкладку (warning, не ошибка).
 - `.htaccess` — https, без www, запрет config.php, кэш и gzip.

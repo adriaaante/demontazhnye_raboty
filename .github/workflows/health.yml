@@ -19,8 +19,8 @@ jobs:
       - name: Сообщить владельцу
         if: failure()
         env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_OWNER_CHAT_ID: ${{ secrets.TG_OWNER_CHAT_ID }}
+          TG_BOT_TOKEN: ${{ secrets.PODNOL_TG_BOT_TOKEN }}
+          TG_OWNER_CHAT_ID: ${{ secrets.FUTUREFLOW_OWNER_CHAT_ID }}
         run: |
           [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_OWNER_CHAT_ID" ] || exit 0
           text="⚠️ подноль.рф: проверка сайта нашла сбой
