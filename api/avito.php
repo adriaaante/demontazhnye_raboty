@@ -183,7 +183,7 @@ if ($messageId !== '') {
 // Сбои ниже — повод написать владельцу: сообщение клиента в группу не попадёт.
 // tg_alert сам не даёт одному и тому же сбою писать чаще раза в 30 минут.
 if (empty($config['avito_client_id']) || empty($config['avito_client_secret'])) {
-    tg_alert($config, 'avito-keys', 'мост Авито молчит: в конфиге нет ключей Авито (секреты PODNOL_AVITO_CLIENT_ID / PODNOL_AVITO_CLIENT_SECRET).');
+    tg_alert($config, 'avito-keys', 'мост Авито молчит: в конфиге нет ключей Авито (секреты AVITO_CLIENT_ID / AVITO_CLIENT_SECRET).');
     done('no_avito_keys');      // без доступа к API отличить своё от чужого нельзя
 }
 $token = avitoToken($config);

@@ -74,7 +74,7 @@
     автоответы «Ассистента Авито» пропускаем.
   - Чтобы отличить своё объявление от чужого и подставить имя клиента, нужен
     токен Авито: `avito_client_id` / `avito_client_secret` в `api/config.php`
-    (секреты `PODNOL_AVITO_CLIENT_ID` / `PODNOL_AVITO_CLIENT_SECRET` этого репозитория —
+    (секреты `AVITO_CLIENT_ID` / `AVITO_CLIENT_SECRET` этого репозитория —
     заданы 23.09.2026; но конфиг собирается, только если есть и
     `PODNOL_TG_BOT_TOKEN` / `PODNOL_TG_CHAT_ID`, без них шаг выходит раньше),
     либо, если секретов нет, `api/avito-config.php` — файл, положенный на
@@ -117,9 +117,9 @@
   `favicon.svg`. Название «Под Ноль» = отраслевой термин «демонтаж под ноль».
 
 ## Деплой
-- **Секреты GitHub — с префиксом проекта** (`PODNOL_FTP_*`, `PODNOL_TG_*`, `PODNOL_AVITO_*`; личка владельца —
-  `FUTUREFLOW_OWNER_CHAT_ID`, как в окружении сессии), решение Adrian 11.10.2026. Старые имена
-  без префикса удалены — воркфлоу их не читают.
+- **Секреты бота в GitHub — с префиксом проекта**: `PODNOL_TG_BOT_TOKEN`, `PODNOL_TG_CHAT_ID`, личка
+  владельца — `FUTUREFLOW_OWNER_CHAT_ID` (как в окружении сессии); решение Adrian 11.10.2026.
+  Остальные секреты (FTP_*, AVITO_*) — прежние имена без префикса.
 - **Доступы в облачной сессии** (переменные окружения claude.ai/code, значения
   только там, в репо — никогда): `BEGET_ARSENIY_LOGIN` / `BEGET_ARSENIY_API_PASSWORD`
   — API Beget (`api.beget.com`, весь аккаунт dudareid: сайты, домены, DNS, FTP,
@@ -135,7 +135,7 @@
   17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
   sitemap/robots указывают на punycode-домен.
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
-  (как у voidaform). Требует секретов репо `PODNOL_FTP_SERVER`/`_USERNAME`/`_PASSWORD`/`_DIR` (свой FTP-аккаунт, привязанный к папке сайта
+  (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/`FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
   подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке),
   `PODNOL_TG_BOT_TOKEN` (бот «Под Ноль»), `PODNOL_TG_CHAT_ID` (общая группа), `FUTUREFLOW_OWNER_CHAT_ID`.
   После заливки шаг «Проверить обработчики» гоняет `scripts/check_live.sh`.

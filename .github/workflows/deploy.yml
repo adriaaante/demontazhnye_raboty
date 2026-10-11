@@ -1,7 +1,7 @@
 name: Deploy to Beget
 
 # Основная выкладка: push в main → сайт уезжает на подноль.рф по FTP.
-# Требует секретов PODNOL_FTP_SERVER / PODNOL_FTP_USERNAME / PODNOL_FTP_PASSWORD / PODNOL_FTP_DIR
+# Требует секретов FTP_SERVER / FTP_USERNAME / FTP_PASSWORD / FTP_DIR
 # пока они не заданы — шаг деплоя просто пропускается (сайт живёт на Pages).
 on:
   push:
@@ -19,10 +19,10 @@ jobs:
       - name: Проверить, что секреты FTP заданы
         id: gate
         env:
-          FTP_SERVER: ${{ secrets.PODNOL_FTP_SERVER }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
         run: |
           if [ -z "$FTP_SERVER" ]; then
-            echo "::warning::секрет PODNOL_FTP_SERVER не задан — выкладка на Beget пропущена"
+            echo "::warning::секрет FTP_SERVER не задан — выкладка на Beget пропущена"
             echo "ready=false" >> "$GITHUB_OUTPUT"
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
@@ -54,8 +54,8 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.PODNOL_TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.PODNOL_TG_CHAT_ID }}
           TG_OWNER_CHAT_ID: ${{ secrets.FUTUREFLOW_OWNER_CHAT_ID }}
-          AVITO_CLIENT_ID: ${{ secrets.PODNOL_AVITO_CLIENT_ID }}
-          AVITO_CLIENT_SECRET: ${{ secrets.PODNOL_AVITO_CLIENT_SECRET }}
+          AVITO_CLIENT_ID: ${{ secrets.AVITO_CLIENT_ID }}
+          AVITO_CLIENT_SECRET: ${{ secrets.AVITO_CLIENT_SECRET }}
         run: |
           if [ -z "$TG_BOT_TOKEN" ] || [ -z "$TG_CHAT_ID" ]; then
             echo "::warning::секреты PODNOL_TG_BOT_TOKEN / PODNOL_TG_CHAT_ID не заданы — заявки пойдут в WhatsApp"
@@ -76,7 +76,7 @@ jobs:
             echo "];"
           } > api/config.php
           if [ -z "$AVITO_CLIENT_ID" ] || [ -z "$AVITO_CLIENT_SECRET" ]; then
-            echo "::warning::секреты PODNOL_AVITO_CLIENT_ID / PODNOL_AVITO_CLIENT_SECRET не заданы — мост Авито→Telegram молчит"
+            echo "::warning::секреты AVITO_CLIENT_ID / AVITO_CLIENT_SECRET не заданы — мост Авито→Telegram молчит"
           fi
           [ -n "$TG_OWNER_CHAT_ID" ] || echo "::warning::секрет FUTUREFLOW_OWNER_CHAT_ID не задан — о сбоях никто не узнает"
           echo "built=true" >> "$GITHUB_OUTPUT"
@@ -86,10 +86,10 @@ jobs:
         if: steps.gate.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.PODNOL_FTP_SERVER }}
-          username: ${{ secrets.PODNOL_FTP_USERNAME }}
-          password: ${{ secrets.PODNOL_FTP_PASSWORD }}
-          server-dir: ${{ secrets.PODNOL_FTP_DIR }}
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_DIR }}
           protocol: ftp
           # в репозитории лежат и служебные файлы — на хостинг они не нужны
           exclude: |
