@@ -38,9 +38,9 @@
 - `js/main.js` — копия voidaform (меню, модалка, fab, формы); телефон и подпись
   заявки заменены. Формы шлют POST на `data-endpoint` (`api/lead.php`),
   при недоступности (на GitHub Pages PHP нет) открывают WhatsApp — это штатный путь.
-- **Заявки — свой обработчик `api/lead.php` и свой бот «Под Ноль»** (с 11.10.2026;
-  до этого формы слали на voidaform.ru). Группа в Telegram общая с voidaform.ru
-  («Void&Form», оба бота в ней). `lead.php` и `tg.php` — **один и тот же файл** в
+- **Заявки — свой обработчик `api/lead.php`, свой бот `@pod_nol_bot` и своя группа**
+  (с 11.10.2026; до этого формы слали на voidaform.ru). Группа Под Ноль —
+  `-5522407239` (бывшая общая «Void&Form»); с 12.10.2026 у voidaform.ru своя группа. `lead.php` и `tg.php` — **один и тот же файл** в
   обоих репозиториях: всё, что отличается у сайтов (домены CORS `origins`, подпись
   `site`, бот, `owner_chat_id`), лежит в `api/config.php`, который собирает выкладка.
   Правишь файл — копируй во второй репо. Формы: `data-endpoint="api/lead.php"`
@@ -133,8 +133,8 @@
   только там, в репо — никогда): `BEGET_ARSENIY_LOGIN` / `BEGET_ARSENIY_API_PASSWORD`
   — API Beget (`api.beget.com`, весь аккаунт dudareid: сайты, домены, DNS, FTP,
   почта, MySQL, cron, бэкапы; файлов API не читает); `VOIDAFORM_TG_BOT_TOKEN` /
-  `VOIDAFORM_TG_CHAT_ID` — `@voidaform_bot` и группа «Void&Form» (общая для
-  обоих сайтов); `PODNOL_TG_BOT_TOKEN` — бот «Под Ноль» (заявки подноль.рф и
+  `VOIDAFORM_TG_CHAT_ID` — `@voidaform_bot` и группа Void (`-5568077474`, только
+  voidaform.ru); `PODNOL_TG_BOT_TOKEN` — бот «Под Ноль» (заявки подноль.рф и
   сообщения Авито); `FUTUREFLOW_OWNER_CHAT_ID` — личка владельца для оповещений;
   `PODNOL_AVITO_CLIENT_ID` /
   `PODNOL_AVITO_CLIENT_SECRET` — API Авито «Под Ноль» (аккаунт 429115960).
@@ -146,7 +146,7 @@
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
   (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/`FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
   подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке),
-  `PODNOL_TG_BOT_TOKEN` (бот «Под Ноль»), `PODNOL_TG_CHAT_ID` (общая группа), `FUTUREFLOW_OWNER_CHAT_ID`.
+  `PODNOL_TG_BOT_TOKEN` (бот «Под Ноль»), `PODNOL_TG_CHAT_ID` (группа Под Ноль, `-5522407239`), `FUTUREFLOW_OWNER_CHAT_ID`.
   После заливки шаг «Проверить обработчики» гоняет `scripts/check_live.sh`.
   **Ключ вебхука Авито выводится из токена бота** — сменил `PODNOL_TG_BOT_TOKEN` →
   после выкладки переподпиши вебхук на новый адрес (`avito.php?setup=<токен>`). Пока секретов нет, воркфлоу
