@@ -1,0 +1,23 @@
+name: Баланс Авито
+
+# Два раза в день (10:07 и 18:07 по Москве) проверяет счёт продвижения Авито;
+# меньше 2 000 ₽ — пишет владельцу в личку от @pod_nol_bot. Пока не пополнят,
+# напоминание приходит при каждой проверке. «Run workflow» — проверить сейчас.
+on:
+  schedule:
+    - cron: "7 7,15 * * *"
+  workflow_dispatch:
+
+jobs:
+  balance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверить баланс продвижения
+        env:
+          AVITO_CLIENT_ID: ${{ secrets.AVITO_CLIENT_ID }}
+          AVITO_CLIENT_SECRET: ${{ secrets.AVITO_CLIENT_SECRET }}
+          TG_BOT_TOKEN: ${{ secrets.PODNOL_TG_BOT_TOKEN }}
+          TG_OWNER_CHAT_ID: ${{ secrets.FUTUREFLOW_OWNER_CHAT_ID }}
+          MIN_RUB: "2000"
+        run: bash scripts/check_avito_balance.sh
