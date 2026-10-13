@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Баланс продвижения Авито «Под Ноль» (счёт, с которого списываются ставки
-# cpxpromo). Ниже порога — сообщение владельцу в личку от бота сайта.
+# cpxpromo). Ниже порога — сообщение в группу Под Ноль от бота сайта.
 # Запускается по расписанию из avito-balance.yml; DRY=1 — только напечатать.
-# Нужны: AVITO_CLIENT_ID, AVITO_CLIENT_SECRET, TG_BOT_TOKEN, TG_OWNER_CHAT_ID.
+# Нужны: AVITO_CLIENT_ID, AVITO_CLIENT_SECRET, TG_BOT_TOKEN, TG_CHAT_ID.
 set -euo pipefail
 MIN_RUB="${MIN_RUB:-2000}"
 
 send() {
   if [ "${DRY:-}" = 1 ]; then echo "[DRY] $1"; return; fi
   curl -sS -m 20 "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
-    --data-urlencode chat_id="$TG_OWNER_CHAT_ID" --data-urlencode text="$1" > /dev/null
+    --data-urlencode chat_id="$TG_CHAT_ID" --data-urlencode text="$1" > /dev/null
 }
 
 # JSON-поле из ответа; пустая строка, если ответа нет или он не JSON
