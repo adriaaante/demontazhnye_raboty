@@ -157,6 +157,16 @@ $itemId    = (int)($m['item_id'] ?? 0);
 $type      = (string)($m['type'] ?? 'text');
 $text      = trim((string)($m['content']['text'] ?? ''));
 
+// CRM: свой ответ в Авито — в историю заявки (по нему считается скорость реакции)
+$crmHook = dirname(__DIR__) . '/crm/lib/ingest.php';
+if ($authorId === AVITO_USER_ID && $type !== 'system' && is_readable($crmHook)) {
+    try {
+        require_once $crmHook;
+        crm_ingest_avito(['chat_id' => $chatId, 'text' => $text !== '' ? $text : '[' . $type . ']'], false);
+    } catch (Throwable $e) {
+        tg_alert($config, 'crm', 'CRM не записала ответ в Авито: ' . $e->getMessage());
+    }
+}
 if ($authorId === AVITO_USER_ID || $authorId === 0) {
     done('own_or_system');      // свой ответ или системное сообщение Авито
 }
@@ -267,6 +277,18 @@ if ($itemUrl !== '') {
     $lines[] = 'Объявление: ' . $itemUrl;
 }
 $lines[] = 'Время: ' . $when->format('d.m.Y H:i');
+
+if (is_readable($crmHook)) {
+    try {
+        require_once $crmHook;
+        $lines[] = 'CRM: ' . crm_ingest_avito([
+            'chat_id' => $chatId, 'author_id' => $authorId, 'author' => $author, 'text' => $text,
+            'item' => $title, 'price' => $price, 'item_url' => $itemUrl,
+        ], true);
+    } catch (Throwable $e) {
+        tg_alert($config, 'crm', 'CRM не записала сообщение из Авито: ' . $e->getMessage() . '. В Telegram оно ушло.');
+    }
+}
 
 $sent = tg_send((string)$config['token'], (string)$config['chat_id'], implode("\n", $lines));
 if (!$sent) {

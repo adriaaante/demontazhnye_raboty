@@ -246,6 +246,18 @@ $text = "Заявка с сайта {$site}\n\n"
     . ($page !== '' ? "Страница: {$page}\n" : '')
     . 'Время: ' . (new DateTimeImmutable('now', new DateTimeZone('Europe/Moscow')))->format('d.m.Y H:i');
 
+// CRM сайта (crm/ — есть у подноль.рф, у voidaform.ru нет): заявка в базу,
+// ссылка на карточку — в сообщение. Сбой CRM заявку не останавливает.
+$crmHook = dirname(__DIR__) . '/crm/lib/ingest.php';
+if (is_readable($crmHook)) {
+    try {
+        require_once $crmHook;
+        $text .= "\nCRM: " . crm_ingest_site_lead(compact('name', 'phone', 'message', 'source', 'page'));
+    } catch (Throwable $e) {
+        tg_alert($config, 'crm', 'CRM не приняла заявку с сайта: ' . $e->getMessage() . '. В Telegram она ушла.');
+    }
+}
+
 if (!tg_send((string)$config['token'], (string)$config['chat_id'], $text)) {
     // Группа не приняла (бота убрали из чата, чат пересоздали…). Заявку
     // целиком — владельцу в личку, чтобы не потерялась; фронт тем временем

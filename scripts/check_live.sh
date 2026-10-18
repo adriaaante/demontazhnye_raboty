@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Проверка живого сайта подноль.рф: главная, обработчик заявок, мост Авито,
-# фид Авито. Запускается после выкладки и по расписанию (health.yml);
+# фид Авито, база CRM. Запускается после выкладки и по расписанию (health.yml);
 # выход с ошибкой — сигнал написать владельцу.
 set -u
 SITE="https://xn--d1aofccc0h.xn--p1ai"
@@ -18,6 +18,9 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 -X POST "$SITE/api/avito.php
 
 code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 "$SITE/avito/avito.xml")
 [ "$code" = 200 ] || err "фид Авито отвечает $code — автозагрузка не обновит объявления"
+
+r=$(curl -sS -m 20 "$SITE/crm/api.php?a=ping" 2>&1)
+echo "$r" | grep -q '"ok":true' || err "CRM не открывает базу (${r:0:120})"
 
 [ $fail = 0 ] && echo "подноль.рф: всё работает"
 exit $fail

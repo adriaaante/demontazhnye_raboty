@@ -52,6 +52,40 @@
   выкладка; `health.yml` раз в 3 часа гоняет `scripts/check_live.sh` (главная,
   токен `lead.php`, `avito.php` → 404, фид Авито). Секрет `FUTUREFLOW_OWNER_CHAT_ID`;
   без него оповещения молчат. Расписание GitHub отключает после 60 дней без коммитов.
+- **CRM — `crm/`** (с 18.10.2026, адрес `подноль.рф/crm/`, noindex, `Disallow` в robots).
+  PHP + SQLite, без сборки: `crm/api.php` (все действия, `?a=…`), `crm/lib/` (db,
+  auth, ingest; закрыт `.htaccess`), `crm/index.html` + `app.js` + `app.css` (SPA,
+  экраны по `#/…`). Меняешь `app.js`/`app.css` — подними `?v=N` в `index.html`.
+  - **База** — `crm-data/crm.sqlite` над public_html (`dirname(__DIR__,3)`), не в
+    git и не в FTP; запасной путь `crm/data/` с запретом доступа. `?a=ping`
+    показывает `store: outside|fallback`. Схема — `crm_migrate()`, версия в
+    `PRAGMA user_version`: новое поле → новый блок `if ($v < N)`.
+  - **Вход** — PIN 6 цифр, уникальный на пользователя (по нему узнаём, кто вошёл),
+    вход сам после 6-й цифры. PIN при создании/сбросе задаёт руководитель или
+    генерирует система — он временный (`must_change`): до смены API пускает только
+    к `my_pin`/`me`/`logout`. Подбор: 5 ошибок с IP → 15 мин, 30 за час со всех →
+    вход закрыт на час + `tg_alert` владельцу. Сессия — токен в cookie `pn_crm`
+    (Path=/crm/, SameSite=Strict), хэш в `sessions`; POST только с
+    `X-Requested-With: crm`.
+  - **Роли**: `dev` — всё; `head` — всё, кроме учёток `dev` (не создаёт, не удаляет,
+    не сбрасывает PIN); `manager` — только заявки. Удаление — `active=0`, сессии
+    стираются, открытые заявки остаются без ответственного.
+  - **Заявки пишутся сами**: `api/lead.php` и `api/avito.php` вызывают
+    `crm/lib/ingest.php`, если он есть (у voidaform.ru его нет — тот же lead.php
+    там no-op); сбой CRM → `tg_alert`, Telegram уходит всё равно; в сообщение
+    добавляется `CRM: ссылка`. Клиент один: по телефону (`7XXXXXXXXXX`) или
+    `avito_user_id`; чат Авито = одна заявка (`channel_ref avito:<chat>`) 30 дней,
+    потом новая. Ответы сотрудника в Авито пишутся событием `out` и ставят
+    `first_touch_at` — по нему считается скорость реакции.
+  - **История** — таблица `events` (кто, что, когда, meta JSON): created, in, out,
+    status (from/to/reason/amount), comment, assign, edit, login, user_*.
+    Статусы и причины отказа — константы в `crm/lib/db.php`.
+  - **Первый разработчик** — `POST ?a=bootstrap` с `key = sha256('crm-setup|'+токен
+    бота)[0:32]`, только пока пользователей нет. **Выгрузка для анализа** —
+    `GET ?a=export&key=sha256('crm-export|'+токен)[0:32]` (всё, только чтение).
+  - Проверять локально: копия сайта + фейковый `api/config.php`, `php -S
+    127.0.0.1:8095` из корня копии (cookie без Secure только на 127.0.0.1),
+    curl с `X-Requested-With: crm`; UI — Playwright, 390 и 1280 px.
 - **PHP на подноль.рф — 8.5** (у voidaform.ru — 8.3). Версия задаётся в панели
   Beget для каждого сайта отдельно; до 23.09.2026 здесь стояла 5.6, и весь наш
   PHP падал с пустым 500 (типизированные аргументы, `??`, стрелочные функции).
