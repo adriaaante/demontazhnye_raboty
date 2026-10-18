@@ -1,0 +1,32 @@
+name: CRM — сверка с Авито
+
+# Раз в 30 минут догоняет в CRM переписку Авито, которую мог пропустить вебхук
+# (crm/api.php?a=avito_sync). Ключ выводится из токена бота — отдельный секрет
+# не нужен. Сбой — сообщение владельцу в личку. «Run workflow» — сверить сейчас.
+on:
+  schedule:
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Сверить CRM с Авито
+        env:
+          TG_BOT_TOKEN: ${{ secrets.PODNOL_TG_BOT_TOKEN }}
+        run: |
+          key=$(printf 'crm-sync|%s' "$TG_BOT_TOKEN" | sha256sum | cut -c1-32)
+          r=$(curl -sS -m 200 "https://xn--d1aofccc0h.xn--p1ai/crm/api.php?a=avito_sync&key=$key")
+          echo "$r"
+          echo "$r" | grep -q '"ok":true'
+      - name: Сообщить владельцу
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.PODNOL_TG_BOT_TOKEN }}
+          TG_OWNER_CHAT_ID: ${{ secrets.FUTUREFLOW_OWNER_CHAT_ID }}
+        run: |
+          [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_OWNER_CHAT_ID" ] || exit 0
+          curl -sS -m 20 "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="$TG_OWNER_CHAT_ID" \
+            --data-urlencode text="⚠️ подноль.рф: CRM не сверилась с Авито — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" > /dev/null

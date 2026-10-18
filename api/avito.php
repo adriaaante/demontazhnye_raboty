@@ -162,7 +162,7 @@ $crmHook = dirname(__DIR__) . '/crm/lib/ingest.php';
 if ($authorId === AVITO_USER_ID && $type !== 'system' && is_readable($crmHook)) {
     try {
         require_once $crmHook;
-        crm_ingest_avito(['chat_id' => $chatId, 'text' => $text !== '' ? $text : '[' . $type . ']'], false);
+        crm_ingest_avito(['chat_id' => $chatId, 'msg_id' => $messageId, 'text' => $text !== '' ? $text : '[' . $type . ']'], false);
     } catch (Throwable $e) {
         tg_alert($config, 'crm', 'CRM не записала ответ в Авито: ' . $e->getMessage());
     }
@@ -282,7 +282,7 @@ if (is_readable($crmHook)) {
     try {
         require_once $crmHook;
         $lines[] = 'CRM: ' . crm_ingest_avito([
-            'chat_id' => $chatId, 'author_id' => $authorId, 'author' => $author, 'text' => $text,
+            'chat_id' => $chatId, 'msg_id' => $messageId, 'author_id' => $authorId, 'author' => $author, 'text' => $text,
             'item' => $title, 'price' => $price, 'item_url' => $itemUrl,
         ], true);
     } catch (Throwable $e) {

@@ -88,6 +88,7 @@ function crm_ingest_avito(array $m, bool $incoming): string
     if ($chatId === '') {
         return '';
     }
+    $ext = ($m['msg_id'] ?? '') !== '' ? 'avito:' . $m['msg_id'] : null;
     $db = crm_db();
     $now = time();
     $st = $db->prepare('SELECT * FROM leads WHERE channel_ref = ? ORDER BY id DESC LIMIT 1');
@@ -98,7 +99,7 @@ function crm_ingest_avito(array $m, bool $incoming): string
         if (!$lead) {
             return '';
         }
-        crm_event((int)$lead['id'], (int)$lead['client_id'], null, 'out', (string)($m['text'] ?? ''), ['via' => 'avito']);
+        crm_event((int)$lead['id'], (int)$lead['client_id'], null, 'out', (string)($m['text'] ?? ''), ['via' => 'avito'], $ext);
         $db->prepare('UPDATE leads SET first_touch_at = COALESCE(first_touch_at, ?), updated_at = ? WHERE id = ?')
             ->execute([$now, $now, $lead['id']]);
         return crm_lead_url((int)$lead['id']);
@@ -122,7 +123,7 @@ function crm_ingest_avito(array $m, bool $incoming): string
                     ->execute([$phone, $now, $clientId, $phone, $clientId]);
             }
             $db->prepare('UPDATE leads SET unread = 1, updated_at = ? WHERE id = ?')->execute([$now, $leadId]);
-            crm_event($leadId, $clientId, null, 'in', $text, ['via' => 'avito']);
+            crm_event($leadId, $clientId, null, 'in', $text, ['via' => 'avito'], $ext);
         } else {
             $clientId = crm_client($phone, (int)($m['author_id'] ?? 0) ?: null, (string)($m['author'] ?? ''));
             $db->prepare('INSERT INTO leads(client_id, source, channel_ref, title, message, item_url, status, created_at, updated_at)
@@ -132,7 +133,7 @@ function crm_ingest_avito(array $m, bool $incoming): string
             crm_event($leadId, $clientId, null, 'created', $text, [
                 'source' => 'avito', 'item' => $m['item'] ?? '', 'price' => $m['price'] ?? '',
                 'chat' => 'https://www.avito.ru/profile/messenger/channel/' . $chatId,
-            ]);
+            ], $ext);
         }
         $db->commit();
     } catch (Throwable $e) {

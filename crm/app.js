@@ -78,7 +78,7 @@
       '<div class="pad" id="pad">' +
       [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<button type="button" data-k="' + n + '">' + n + "</button>"; }).join("") +
       '<button type="button" class="ghost" data-k="c">Сброс</button><button type="button" data-k="0">0</button><button type="button" class="ghost" data-k="b" aria-label="Стереть">⌫</button>' +
-      "</div></div></div>";
+      "</div>" + '<a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener">Сделано в <img src="ff-logo.png" alt="FutureFlow" width="93" height="20"></a>' + "</div></div>";
     var cells = document.getElementById("cells"), msg = document.getElementById("pinmsg"), busy = false;
     function draw() { [].forEach.call(cells.children, function (c, i) { c.classList.toggle("on", i < val.length); }); }
     function press(k) {
@@ -143,7 +143,7 @@
       (head ? '<a href="#/stats" class="' + (active === "stats" ? "on" : "") + '">Сводка</a>' : "") +
       (head ? '<a href="#/team" class="' + (active === "team" ? "on" : "") + '">Команда</a>' : "") +
       '<a href="#/me" class="' + (active === "me" ? "on" : "") + '">' + esc(S.me.name) + "</a>" +
-      "</nav></div></header><main class=\"wrap\">" + html + "</main>";
+      "</nav></div></header><main class=\"wrap\">" + html + '<footer class="foot"><a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener">Сделано в <img src="ff-logo.png" alt="FutureFlow" width="93" height="20"></a></footer></main>';
   }
   function boot() {
     api("me").then(function (d) {
@@ -356,56 +356,101 @@
   }
 
   // ---------- команда ----------
+  // общий каркас окна: закрытие по фону, Esc и кнопке «Отмена»
+  function modal(html, onReady) {
+    var m = document.createElement("div");
+    m.className = "modal";
+    m.innerHTML = '<div class="card dialog" role="dialog" aria-modal="true">' + html + "</div>";
+    document.body.appendChild(m);
+    function close() { document.removeEventListener("keydown", onKey); m.remove(); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    m.addEventListener("click", function (e) { if (e.target === m || e.target.closest("[data-close]")) close(); });
+    var f = m.querySelector("input, button.btn");
+    if (f) f.focus();
+    if (onReady) onReady(m, close);
+    return close;
+  }
+  var ROLE_HINT = {
+    manager: "Работает с заявками: статусы, комментарии, звонки",
+    head: "Заявки, сводка и команда — кроме разработчиков",
+    dev: "Полный доступ, в том числе к разработчикам",
+  };
   function viewTeam() {
     if (S.me.role === "manager") { location.hash = "#/"; return; }
     shell("team", '<div class="empty">Загружаю…</div>');
     api("users").then(function (d) {
       var roles = S.dict.roles;
-      var canCreate = Object.keys(roles).filter(function (r) { return S.me.role === "dev" || r !== "dev"; });
       shell("team",
-        "<h1>Команда</h1>" +
+        '<div class="row" style="justify-content:space-between;margin-bottom:14px"><h1 style="margin:0">Команда</h1>' +
+        '<button type="button" class="btn" id="addUser">Добавить сотрудника</button></div>' +
         '<div class="people" id="people">' +
         d.users.map(function (u) {
-          return '<div class="person"><div><div class="nm">' + esc(u.name) + (+u.id === +S.me.id ? ' <span class="muted small">(вы)</span>' : "") + "</div>" +
-            '<div class="meta">' + esc(roles[u.role]) + " · " + (u.last_login ? "входил " + ago(u.last_login) : "ещё не входил") + "</div></div>" +
-            (u.can_manage ? '<div class="row"><button type="button" class="btn ghost small" data-pin="' + u.id + '">Новый PIN</button><button type="button" class="btn danger small" data-del="' + u.id + '">Удалить</button></div>' : "") + "</div>";
-        }).join("") + "</div>" +
-        "<h2>Добавить сотрудника</h2>" +
-        '<form class="card" id="uf" style="display:flex;flex-direction:column;gap:10px">' +
-        '<div class="grid2"><label class="f">Имя<input type="text" id="u_name" required autocomplete="off"></label>' +
-        '<label class="f">Роль<select id="u_role">' + canCreate.map(function (r) { return '<option value="' + r + '"' + (r === "manager" ? " selected" : "") + ">" + esc(roles[r]) + "</option>"; }).join("") + "</select></label></div>" +
-        '<label class="f">Начальный PIN (6 цифр)<input type="text" id="u_pin" inputmode="numeric" maxlength="6" pattern="\\d{6}" placeholder="Пусто — придумаем сами" autocomplete="off"></label>' +
-        '<p class="muted small" style="margin:0">При первом входе сотрудник обязательно заменит этот PIN на свой. Руководитель не может создавать и удалять разработчиков.</p>' +
-        '<div><button class="btn">Добавить</button></div></form>');
-      document.getElementById("uf").onsubmit = function (e) {
-        e.preventDefault();
-        api("user_create", { name: v("u_name"), role: v("u_role"), pin: v("u_pin") })
-          .then(function (r) { pinModal("Сотрудник «" + v("u_name") + "» добавлен", r.pin); viewTeam(); }).catch(fail);
-      };
+          return '<div class="person"><div class="pinfo"><div class="nm">' + esc(u.name) + (+u.id === +S.me.id ? ' <span class="muted small">· вы</span>' : "") + "</div>" +
+            '<div class="meta"><span class="role role-' + u.role + '">' + esc(roles[u.role]) + "</span>" + (u.last_login ? "входил " + ago(u.last_login) : "ещё не входил") + "</div></div>" +
+            (u.can_manage ? '<div class="pact"><button type="button" class="link" data-pin="' + u.id + '" data-name="' + esc(u.name) + '">Сменить PIN</button>' +
+              '<button type="button" class="link danger" data-del="' + u.id + '" data-name="' + esc(u.name) + '">Удалить</button></div>' : "") + "</div>";
+        }).join("") + "</div>");
+      document.getElementById("addUser").onclick = addUserModal;
       document.getElementById("people").onclick = function (e) {
         var b = e.target.closest("button");
         if (!b) return;
-        if (b.hasAttribute("data-del")) {
-          if (!confirm("Удалить сотрудника? Он сразу потеряет доступ, его открытые заявки останутся без ответственного.")) return;
-          api("user_delete", { id: +b.getAttribute("data-del") }).then(function () { toast("Удалён"); refreshTeam(); }).catch(fail);
-        } else {
-          var p = prompt("Новый временный PIN (6 цифр). Оставьте пустым — придумаем сами:", "");
-          if (p === null) return;
-          api("user_pin_reset", { id: +b.getAttribute("data-pin"), pin: p.trim() }).then(function (r) { pinModal("Новый временный PIN", r.pin); }).catch(fail);
-        }
+        var id = +(b.getAttribute("data-del") || b.getAttribute("data-pin")), name = b.getAttribute("data-name");
+        if (b.hasAttribute("data-del")) deleteUserModal(id, name); else resetPinModal(id, name);
       };
     }).catch(fail);
   }
+  function addUserModal() {
+    var roles = S.dict.roles;
+    var allowed = ["manager", "head", "dev"].filter(function (r) { return S.me.role === "dev" || r !== "dev"; });
+    modal('<h2>Новый сотрудник</h2>' +
+      '<form id="uf" class="stack">' +
+      '<label class="f">Имя<input type="text" id="u_name" autocomplete="off" required placeholder="Например: Ольга"></label>' +
+      '<fieldset class="roles"><legend>Роль</legend>' +
+      allowed.map(function (r) {
+        return '<label class="rolecard"><input type="radio" name="u_role" value="' + r + '"' + (r === "manager" ? " checked" : "") + '><span><b>' + esc(roles[r]) + "</b><small>" + esc(ROLE_HINT[r]) + "</small></span></label>";
+      }).join("") + "</fieldset>" +
+      '<label class="f">Начальный PIN<input type="text" id="u_pin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 цифр или оставьте пустым"></label>' +
+      '<p class="hint">Пустое поле — PIN придумаем сами. При первом входе сотрудник заменит его на свой.</p>' +
+      '<div class="actions"><button type="button" class="btn ghost" data-close>Отмена</button><button class="btn">Добавить</button></div></form>',
+      function (m, close) {
+        m.querySelector("#uf").onsubmit = function (e) {
+          e.preventDefault();
+          var name = v("u_name"), role = m.querySelector('input[name="u_role"]:checked').value;
+          api("user_create", { name: name, role: role, pin: v("u_pin") })
+            .then(function (r) { close(); pinModal("PIN для входа: " + name, r.pin); }).catch(fail);
+        };
+      });
+  }
+  function resetPinModal(id, name) {
+    modal("<h2>Новый PIN — " + esc(name) + "</h2>" +
+      '<form id="pf" class="stack"><label class="f">Временный PIN<input type="text" id="p_pin" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 цифр или оставьте пустым"></label>' +
+      '<p class="hint">Старый PIN перестанет работать сразу, вход на всех устройствах сбросится. При входе сотрудник задаст свой.</p>' +
+      '<div class="actions"><button type="button" class="btn ghost" data-close>Отмена</button><button class="btn">Сменить</button></div></form>',
+      function (m, close) {
+        m.querySelector("#pf").onsubmit = function (e) {
+          e.preventDefault();
+          api("user_pin_reset", { id: id, pin: v("p_pin") }).then(function (r) { close(); pinModal("Новый PIN — " + name, r.pin); }).catch(fail);
+        };
+      });
+  }
+  function deleteUserModal(id, name) {
+    modal("<h2>Удалить сотрудника?</h2><p style=\"margin:0\"><b>" + esc(name) + "</b></p>" +
+      '<p class="hint" style="margin:0">Доступ пропадёт сразу. Его открытые заявки останутся без ответственного, история действий сохранится.</p>' +
+      '<div class="actions"><button type="button" class="btn ghost" data-close>Отмена</button><button type="button" class="btn danger-solid" id="d_ok">Удалить</button></div>',
+      function (m, close) {
+        m.querySelector("#d_ok").onclick = function () {
+          api("user_delete", { id: id }).then(function () { close(); toast("Сотрудник удалён"); refreshTeam(); }).catch(fail);
+        };
+      });
+  }
   function refreshTeam() { api("me").then(function (d) { S.users = d.users; viewTeam(); }).catch(fail); }
   function pinModal(title, pin) {
-    var m = document.createElement("div");
-    m.className = "modal";
-    m.innerHTML = '<div class="card"><h2 style="margin:0">' + esc(title) + "</h2>" +
+    modal("<h2>" + esc(title) + "</h2>" +
       '<div class="bigpin">' + esc(pin.slice(0, 3) + " " + pin.slice(3)) + "</div>" +
-      '<p class="muted small" style="margin:0">Передайте PIN сотруднику лично. Больше он нигде не показывается. При первом входе сотрудник задаст свой.</p>' +
-      '<div class="row" style="justify-content:flex-end"><button type="button" class="btn">Готово</button></div></div>';
-    document.body.appendChild(m);
-    m.querySelector("button").onclick = function () { m.remove(); refreshTeam(); };
+      '<p class="hint" style="margin:0">Передайте PIN лично — больше он нигде не показывается.</p>' +
+      '<div class="actions"><button type="button" class="btn" data-close>Готово</button></div>');
+    refreshTeam();
   }
 
   // ---------- сводка ----------

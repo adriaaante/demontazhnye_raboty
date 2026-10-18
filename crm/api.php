@@ -26,13 +26,34 @@ function fail(string $msg, int $code = 400): never
     out(['ok' => false, 'error' => $msg], $code);
 }
 
-/** Ключ из токена бота сайта: для первичной настройки и выгрузки данных. */
+function site_config(): array
+{
+    static $cfg = null;
+    if ($cfg === null) {
+        $file = dirname(__DIR__) . '/api/config.php';
+        $cfg = is_readable($file) ? (require $file) : [];
+        $cfg = is_array($cfg) ? $cfg : [];
+    }
+    return $cfg;
+}
+
+/** Ключ из токена бота сайта: первичная настройка, выгрузка, сверка с Авито. */
 function site_key(string $purpose): string
 {
-    $cfgFile = dirname(__DIR__) . '/api/config.php';
-    $cfg = is_readable($cfgFile) ? require $cfgFile : null;
-    $token = is_array($cfg) ? (string)($cfg['token'] ?? '') : '';
+    $token = (string)(site_config()['token'] ?? '');
     return $token === '' ? '' : substr(hash('sha256', 'crm-' . $purpose . '|' . $token), 0, 32);
+}
+
+/** Сверка с Авито; full — вся история, иначе с прошлой сверки (запас час). */
+function run_avito_sync(bool $full): array
+{
+    require_once __DIR__ . '/lib/avito_sync.php';
+    @set_time_limit(180);
+    $since = $full ? 0 : max(0, (int)(crm_kv('avito_sync_at') ?? 0) - 3600);
+    $startedAt = time();
+    $r = crm_avito_sync(site_config(), $since);
+    crm_kv('avito_sync_at', (string)$startedAt);
+    return $r;
 }
 
 $a = (string)($_GET['a'] ?? '');
@@ -75,6 +96,14 @@ try {
             fail('forbidden', 403);
         }
         out(export_all($db));
+    }
+    if ($a === 'avito_sync' && !$isPost && isset($_GET['key'])) {
+        // по расписанию (crm-sync.yml): ключ из токена бота
+        $key = site_key('sync');
+        if ($key === '' || !hash_equals($key, (string)$_GET['key'])) {
+            fail('forbidden', 403);
+        }
+        out(['ok' => true] + run_avito_sync(($_GET['full'] ?? '') === '1'));
     }
     if ($a === 'login' && $isPost) {
         try {
@@ -280,6 +309,12 @@ try {
                 fail('Нет доступа', 403);
             }
             out(['ok' => true] + stats($db, max(1, min(365, (int)($_GET['days'] ?? 30)))));
+
+        case 'avito_sync':
+            if ($me['role'] === 'manager') {
+                fail('Нет доступа', 403);
+            }
+            out(['ok' => true] + run_avito_sync(false));
 
         case 'export':
             if ($me['role'] !== 'dev') {

@@ -143,3 +143,34 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .person{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .person .nm{font-weight:700}
 .person .meta{font-size:13px;color:var(--muted)}
+
+/* окна */
+.dialog{gap:14px}
+.dialog h2{margin:0;font-size:18px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.hint{font-size:13px;color:var(--muted);margin:-6px 0 0}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.roles{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.roles legend{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px;padding:0}
+.rolecard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+.rolecard:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.rolecard input{margin-top:3px;accent-color:var(--accent)}
+.rolecard b{display:block;font-size:14px}
+.rolecard small{display:block;font-size:12px;color:var(--muted)}
+.btn.danger-solid{background:var(--bad)}
+.btn.danger-solid:hover{background:#A0302A}
+/* команда */
+.person .pinfo{min-width:0}
+.person .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.role{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.role-head{background:var(--blue-soft);color:var(--blue)}
+.role-dev{background:var(--ink);color:#fff}
+.pact{display:flex;gap:4px}
+button.link{background:none;border:0;padding:6px 8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:8px}
+button.link:hover{background:var(--bg);color:var(--ink)}
+button.link.danger:hover{color:var(--bad)}
+/* подпись FutureFlow */
+.ffmark{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);text-decoration:none}
+.ffmark img{width:93px;height:20px;display:block}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:center}
+.pin .ffmark{margin-top:28px;color:#8E8D89}

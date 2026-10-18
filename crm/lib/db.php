@@ -104,13 +104,40 @@ CREATE INDEX login_attempts_ts ON login_attempts(ts);
 PRAGMA user_version = 1;
 SQL);
     }
+    if ($v < 2) {
+        // ext_id — id сообщения Авито: вебхук и сверка пишут одно сообщение один раз
+        $db->exec(<<<SQL
+ALTER TABLE events ADD COLUMN ext_id TEXT;
+CREATE UNIQUE INDEX events_ext ON events(ext_id) WHERE ext_id IS NOT NULL;
+CREATE TABLE kv(k TEXT PRIMARY KEY, v TEXT);
+PRAGMA user_version = 2;
+SQL);
+    }
 }
 
-/** Запись в историю: кто (null — система/клиент), что, по какой заявке. */
-function crm_event(?int $leadId, ?int $clientId, ?int $userId, string $type, string $text = '', array $meta = []): void
+function crm_kv(string $k, ?string $set = null): ?string
 {
-    crm_db()->prepare('INSERT INTO events(lead_id, client_id, user_id, type, text, meta, created_at) VALUES(?,?,?,?,?,?,?)')
-        ->execute([$leadId, $clientId, $userId, $type, $text, $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null, time()]);
+    if ($set !== null) {
+        crm_db()->prepare('INSERT INTO kv(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v')->execute([$k, $set]);
+        return $set;
+    }
+    $st = crm_db()->prepare('SELECT v FROM kv WHERE k = ?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    return $v === false ? null : (string)$v;
+}
+
+/**
+ * Запись в историю: кто (null — система/клиент), что, по какой заявке.
+ * $extId — id сообщения во внешней системе («avito:<id>»): повтор не пишется.
+ * Возвращает true, если запись добавлена.
+ */
+function crm_event(?int $leadId, ?int $clientId, ?int $userId, string $type, string $text = '', array $meta = [],
+                   ?string $extId = null, ?int $at = null): bool
+{
+    $st = crm_db()->prepare('INSERT OR IGNORE INTO events(lead_id, client_id, user_id, type, text, meta, ext_id, created_at) VALUES(?,?,?,?,?,?,?,?)');
+    $st->execute([$leadId, $clientId, $userId, $type, $text, $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null, $extId, $at ?? time()]);
+    return $st->rowCount() > 0;
 }
 
 /** Телефон к виду 7XXXXXXXXXX; null, если на телефон не похоже. */
