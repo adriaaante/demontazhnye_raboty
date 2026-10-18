@@ -291,7 +291,7 @@
       '<a href="#/" class="small">← Все заявки</a>' +
       '<div class="head" style="margin-top:8px"><div><h1 style="margin-bottom:4px">' + esc(title) + ' <span class="muted small">№' + l.id + "</span></h1>" +
       (c.phone ? '<a class="phone" href="tel:+' + esc(c.phone) + '">' + esc(fmtPhone(c.phone)) + "</a>" : '<span class="muted">телефона нет</span>') + "</div>" +
-      '<button type="button" class="btn ghost small" id="edit">Изменить данные</button></div>' +
+      '<button type="button" class="btn ghost" id="edit">Изменить данные</button></div>' +
       '<div class="card" style="margin-top:14px">' + info + "</div>" +
       '<div class="state">' +
       '<div class="srow"><div><div class="slabel">Статус</div><div class="sval">' + stChip(l.status) +
@@ -304,7 +304,7 @@
       '<button type="button" class="btn ghost" id="chasg">' + (l.assignee_id ? "Сменить" : "Назначить") + "</button></div>" +
       "</div>" +
       "<h2>Комментарий</h2>" +
-      '<form id="cf" class="row" style="align-items:stretch"><textarea id="ctext" placeholder="Что обсудили, о чём договорились, когда перезвонить" style="flex:1;min-width:220px"></textarea><button class="btn">Добавить</button></form>' +
+      '<form id="cf" class="cform"><textarea id="ctext" placeholder="Что обсудили, о чём договорились, когда перезвонить"></textarea><button class="btn">Добавить комментарий</button></form>' +
       "<h2>История</h2><div class=\"card timeline\">" + tl + "</div>" + other);
 
     document.getElementById("chst").onclick = function () { statusModal(l); };
@@ -537,7 +537,7 @@
         d.people.map(function (p) {
           return "<tr><td>" + esc(p.name) + ' <span class="muted small">' + esc(roles[p.role]) + '</span></td><td class="n">' + p.leads + '</td><td class="n">' + mins(p.touch_median) + '</td><td class="n">' + p.status + '</td><td class="n">' + p.comment + '</td><td class="n">' + p.won + '</td><td class="n">' + p.lost + "</td></tr>";
         }).join("") + "</table></div>" +
-        '<p class="muted small">«Реакция» — медиана времени от поступления заявки до первого действия: смены статуса, комментария, назначения или ответа в Авито.</p>');
+        '<p class="muted small">«Реакция» — медиана времени от поступления заявки до первого действия: смены статуса, комментария или ответа в Авито.</p>');
       document.getElementById("per").onclick = function (e) { var b = e.target.closest("button"); if (b) viewStats(+b.getAttribute("data-d")); };
     }).catch(fail);
   }
