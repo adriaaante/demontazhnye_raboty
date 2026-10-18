@@ -152,13 +152,24 @@ try {
             if ($status === 'lost' && $reason === '') {
                 fail('Укажите причину отказа');
             }
+            if ($status === $lead['status']) {
+                fail('Статус уже «' . CRM_STATUSES[$status] . '»');
+            }
+            // кто-то успел поменять статус, пока окно было открыто, — не перезаписываем молча
+            $from = $str('from', 20);
+            if ($from !== '' && $from !== $lead['status']) {
+                $st = $db->prepare("SELECT u.name FROM events e LEFT JOIN users u ON u.id = e.user_id
+                                    WHERE e.lead_id = ? AND e.type = 'status' ORDER BY e.id DESC LIMIT 1");
+                $st->execute([$lead['id']]);
+                fail('Статус уже изменил(а) ' . ($st->fetchColumn() ?: 'другой сотрудник') . ': сейчас «'
+                    . CRM_STATUSES[$lead['status']] . '». Обновите карточку.', 409);
+            }
             $amount = isset($in['amount']) && $in['amount'] !== '' ? max(0, (int)$in['amount']) : null;
             $now = time();
             $db->prepare('UPDATE leads SET status = ?, reason = ?, amount = COALESCE(?, amount), updated_at = ?,
-                          closed_at = ?, first_touch_at = COALESCE(first_touch_at, ?),
-                          assignee_id = COALESCE(assignee_id, ?) WHERE id = ?')
+                          closed_at = ?, first_touch_at = COALESCE(first_touch_at, ?) WHERE id = ?')
                 ->execute([$status, $status === 'lost' ? $reason : null, $amount, $now,
-                    in_array($status, CRM_CLOSED, true) ? $now : null, $now, $meId, $lead['id']]);
+                    in_array($status, CRM_CLOSED, true) ? $now : null, $now, $lead['id']]);
             crm_event((int)$lead['id'], (int)$lead['client_id'], $meId, 'status', $comment,
                 ['from' => $lead['status'], 'to' => $status, 'reason' => $status === 'lost' ? $reason : null, 'amount' => $amount]);
             out(['ok' => true]);
@@ -183,8 +194,8 @@ try {
                     fail('Сотрудник не найден');
                 }
             }
-            $db->prepare('UPDATE leads SET assignee_id = ?, updated_at = ?, first_touch_at = COALESCE(first_touch_at, ?) WHERE id = ?')
-                ->execute([$uid, time(), time(), $lead['id']]);
+            $db->prepare('UPDATE leads SET assignee_id = ?, updated_at = ? WHERE id = ?')
+                ->execute([$uid, time(), $lead['id']]);
             crm_event((int)$lead['id'], (int)$lead['client_id'], $meId, 'assign', '', ['to' => $uid]);
             out(['ok' => true]);
 
@@ -230,9 +241,9 @@ try {
             $db->beginTransaction();
             $clientId = crm_client($phone, null, $name);
             $now = time();
-            $db->prepare('INSERT INTO leads(client_id, source, title, message, status, assignee_id, unread, created_at, updated_at, first_touch_at)
-                          VALUES(?, \'manual\', ?, ?, \'new\', ?, 0, ?, ?, ?)')
-                ->execute([$clientId, $str('title', 200), $str('message'), $meId, $now, $now, $now]);
+            $db->prepare('INSERT INTO leads(client_id, source, title, message, status, unread, created_at, updated_at, first_touch_at)
+                          VALUES(?, \'manual\', ?, ?, \'new\', 0, ?, ?, ?)')
+                ->execute([$clientId, $str('title', 200), $str('message'), $now, $now, $now]);
             $id = (int)$db->lastInsertId();
             crm_event($id, $clientId, $meId, 'created', $str('message'), ['source' => 'manual', 'channel' => $str('channel', 40)]);
             $db->commit();
@@ -354,12 +365,13 @@ function lead_row(PDO $db, int $id): array
     return $l;
 }
 
-/** Первое действие сотрудника по заявке; без ответственного — назначаем его. */
+/** Первое действие сотрудника по заявке (для скорости реакции). Ответственного
+ *  не подставляем — его выбирают явно. */
 function touch_lead(PDO $db, array $lead, int $userId): void
 {
     $now = time();
-    $db->prepare('UPDATE leads SET updated_at = ?, first_touch_at = COALESCE(first_touch_at, ?), assignee_id = COALESCE(assignee_id, ?) WHERE id = ?')
-        ->execute([$now, $now, $userId, $lead['id']]);
+    $db->prepare('UPDATE leads SET updated_at = ?, first_touch_at = COALESCE(first_touch_at, ?) WHERE id = ?')
+        ->execute([$now, $now, $lead['id']]);
 }
 
 function leads_list(PDO $db, int $meId, string $tab, string $q): array

@@ -113,6 +113,15 @@ CREATE TABLE kv(k TEXT PRIMARY KEY, v TEXT);
 PRAGMA user_version = 2;
 SQL);
     }
+    if ($v < 3) {
+        // ответственный больше не подставляется сам при действии — снимаем
+        // такие автоназначения (у них нет события «назначен»), выбранные вручную остаются
+        $db->exec(<<<SQL
+UPDATE leads SET assignee_id = NULL WHERE assignee_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM events e WHERE e.lead_id = leads.id AND e.type = 'assign');
+PRAGMA user_version = 3;
+SQL);
+    }
 }
 
 function crm_kv(string $k, ?string $set = null): ?string

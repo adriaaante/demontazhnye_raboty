@@ -256,15 +256,13 @@
     api("lead", null, "&id=" + id).then(function (d) { drawLead(d); }).catch(function (e) { fail(e); });
   }
   function drawLead(d) {
-    var l = d.lead, c = d.client, isClosed = l.status === "done" || l.status === LOST;
+    var l = d.lead, c = d.client;
     var created = d.events.length ? d.events[0].meta || {} : {};
     var title = c.name || fmtPhone(c.phone) || "Клиент без имени";
-    var pipe = Object.keys(S.dict.statuses).map(function (s) {
-      return '<button type="button" data-s="' + s + '" class="' + s + (l.status === s ? " on" : "") + '">' + esc(S.dict.statuses[s]) + "</button>";
-    }).join("");
-    var opts = '<option value="">— не назначен —</option>' + S.users.map(function (u) {
-      return '<option value="' + u.id + '"' + (+l.assignee_id === +u.id ? " selected" : "") + ">" + esc(u.name) + "</option>";
-    }).join("");
+    var lastSt = null;
+    d.events.forEach(function (e) { if (e.type === "status") lastSt = e; });
+    var lastAsg = null;
+    d.events.forEach(function (e) { if (e.type === "assign") lastAsg = e; });
     var info = '<dl class="kv">' +
       "<dt>Источник</dt><dd>" + esc(SRC[l.source] || l.source) + (created.channel ? " · " + esc(created.channel) : "") + "</dd>" +
       (l.title ? "<dt>" + (l.source === "avito" ? "Объявление" : "Что нужно") + "</dt><dd>" + esc(l.title) + (created.price ? " — " + esc(created.price) : "") + "</dd>" : "") +
@@ -295,17 +293,22 @@
       (c.phone ? '<a class="phone" href="tel:+' + esc(c.phone) + '">' + esc(fmtPhone(c.phone)) + "</a>" : '<span class="muted">телефона нет</span>') + "</div>" +
       '<button type="button" class="btn ghost small" id="edit">Изменить данные</button></div>' +
       '<div class="card" style="margin-top:14px">' + info + "</div>" +
-      "<h2>Статус</h2>" +
-      '<div class="pipe" id="pipe">' + pipe + "</div>" +
-      '<div id="stextra" hidden class="card" style="margin-top:8px;display:flex;flex-direction:column;gap:10px"></div>' +
-      '<div class="grid2" style="margin-top:14px"><label class="f">Ответственный<select id="asg">' + opts + "</select></label></div>" +
+      '<div class="state">' +
+      '<div class="srow"><div><div class="slabel">Статус</div><div class="sval">' + stChip(l.status) +
+      (l.status === LOST && l.reason ? ' <span class="muted small">' + esc(l.reason) + "</span>" : "") +
+      (l.amount ? ' <span class="muted small">' + money(l.amount) + "</span>" : "") + "</div>" +
+      '<div class="swho">' + (lastSt ? "изменил(а) " + esc(lastSt.user_name || "система") + " · " + ago(lastSt.created_at) : "статус не меняли") + "</div></div>" +
+      '<button type="button" class="btn" id="chst">Изменить статус</button></div>' +
+      '<div class="srow"><div><div class="slabel">Ответственный</div><div class="sval">' + (l.assignee_id ? "<b>" + esc(userName(l.assignee_id)) + "</b>" : '<span class="muted">не назначен</span>') + "</div>" +
+      (lastAsg ? '<div class="swho">назначил(а) ' + esc(lastAsg.user_name || "") + " · " + ago(lastAsg.created_at) + "</div>" : "") + "</div>" +
+      '<button type="button" class="btn ghost" id="chasg">' + (l.assignee_id ? "Сменить" : "Назначить") + "</button></div>" +
+      "</div>" +
       "<h2>Комментарий</h2>" +
       '<form id="cf" class="row" style="align-items:stretch"><textarea id="ctext" placeholder="Что обсудили, о чём договорились, когда перезвонить" style="flex:1;min-width:220px"></textarea><button class="btn">Добавить</button></form>' +
       "<h2>История</h2><div class=\"card timeline\">" + tl + "</div>" + other);
 
-    document.getElementById("asg").onchange = function (e) {
-      api("lead_assign", { id: l.id, user_id: e.target.value ? +e.target.value : null }).then(function () { toast("Ответственный назначен"); viewLead(l.id); }).catch(fail);
-    };
+    document.getElementById("chst").onclick = function () { statusModal(l); };
+    document.getElementById("chasg").onclick = function () { assignModal(l); };
     document.getElementById("cf").onsubmit = function (e) {
       e.preventDefault();
       var t = v("ctext");
@@ -313,28 +316,76 @@
       api("lead_comment", { id: l.id, text: t }).then(function () { toast("Комментарий добавлен"); viewLead(l.id); }).catch(fail);
     };
     document.getElementById("edit").onclick = function () { editModal(l, c); };
-    document.getElementById("pipe").onclick = function (e) {
-      var b = e.target.closest("button");
-      if (!b) return;
-      var s = b.getAttribute("data-s");
-      if (s === l.status) return;
-      var box = document.getElementById("stextra");
-      var html = "<b>" + esc(S.dict.statuses[l.status]) + " → " + esc(S.dict.statuses[s]) + "</b>";
-      if (s === LOST) html += '<label class="f">Причина отказа<select id="sx_reason"><option value="">— выберите —</option>' + S.dict.reasons.map(function (r) { return "<option>" + esc(r) + "</option>"; }).join("") + "</select></label>";
-      if (s === "deal" || s === "done" || s === "estimate") html += '<label class="f">Сумма, ₽<input type="number" id="sx_amount" inputmode="numeric" min="0" step="100" value="' + (l.amount || "") + '"></label>';
-      html += '<label class="f">Комментарий' + (s === LOST ? " (что сказал клиент)" : "") + '<textarea id="sx_comment"></textarea></label>' +
-        '<div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost" id="sx_cancel">Отмена</button><button type="button" class="btn" id="sx_ok">Сохранить</button></div>';
-      box.innerHTML = html; box.hidden = false;
-      document.getElementById("sx_cancel").onclick = function () { box.hidden = true; };
-      document.getElementById("sx_ok").onclick = function () {
-        var reason = s === LOST ? document.getElementById("sx_reason").value : "";
-        if (s === LOST && !reason) { toast("Выберите причину отказа"); return; }
-        var am = document.getElementById("sx_amount");
-        api("lead_status", { id: l.id, status: s, reason: reason, amount: am ? am.value : "", comment: v("sx_comment") })
-          .then(function () { toast("Статус: " + S.dict.statuses[s]); viewLead(l.id); }).catch(fail);
-      };
-    };
-    if (isClosed) document.getElementById("pipe").title = "Заявка закрыта — статус можно вернуть, если клиент вернулся";
+  }
+  var ST_HINT = {
+    new: "С клиентом ещё не связывались",
+    contact: "Был разговор или переписка",
+    visit: "Договорились о выезде на объект",
+    estimate: "Клиент знает цену",
+    deal: "Договорились о работе",
+    done: "Работа выполнена и сдана",
+    lost: "Клиент не будет заказывать",
+  };
+  function statusModal(l) {
+    var keys = Object.keys(S.dict.statuses);
+    modal("<h2>Изменить статус</h2>" +
+      '<form id="sf" class="stack">' +
+      '<fieldset class="roles stlist">' + keys.map(function (k) {
+        var cur = k === l.status;
+        return '<label class="rolecard' + (cur ? " cur" : "") + '"><input type="radio" name="st" value="' + k + '"' + (cur ? " disabled" : "") + ">" +
+          "<span><b>" + esc(S.dict.statuses[k]) + (cur ? ' <em>сейчас</em>' : "") + "</b><small>" + esc(ST_HINT[k] || "") + "</small></span></label>";
+      }).join("") + "</fieldset>" +
+      '<div id="sx" class="stack" hidden>' +
+      '<fieldset class="roles" id="sx_r" hidden><legend>Причина отказа — обязательно</legend>' +
+      S.dict.reasons.map(function (r) { return '<label class="rolecard tight"><input type="radio" name="rs" value="' + esc(r) + '"><span><b>' + esc(r) + "</b></span></label>"; }).join("") + "</fieldset>" +
+      '<label class="f" id="sx_a" hidden>Сумма, ₽<input type="number" id="sx_amount" inputmode="numeric" min="0" step="100" value="' + (l.amount || "") + '" placeholder="Если известна"></label>' +
+      '<label class="f">Комментарий<textarea id="sx_comment" placeholder="Что сказал клиент, о чём договорились"></textarea></label></div>' +
+      '<div class="actions"><button type="button" class="btn ghost" data-close>Отмена</button><button class="btn" id="sx_ok" disabled>Выберите статус</button></div></form>',
+      function (m, close) {
+        var form = m.querySelector("#sf"), ok = m.querySelector("#sx_ok");
+        function sel() { var r = form.querySelector('input[name="st"]:checked'); return r ? r.value : ""; }
+        function upd() {
+          var s = sel(), reason = form.querySelector('input[name="rs"]:checked');
+          m.querySelector("#sx").hidden = !s;
+          m.querySelector("#sx_r").hidden = s !== LOST;
+          m.querySelector("#sx_a").hidden = ["estimate", "deal", "done"].indexOf(s) < 0;
+          ok.disabled = !s || (s === LOST && !reason);
+          ok.textContent = !s ? "Выберите статус" : s === LOST && !reason ? "Укажите причину" : S.dict.statuses[l.status] + " → " + S.dict.statuses[s];
+        }
+        form.addEventListener("change", upd);
+        form.onsubmit = function (e) {
+          e.preventDefault();
+          var s = sel(), r = form.querySelector('input[name="rs"]:checked');
+          if (!s || (s === LOST && !r)) return;
+          ok.disabled = true;
+          api("lead_status", { id: l.id, from: l.status, status: s, reason: r ? r.value : "", amount: m.querySelector("#sx_amount").value, comment: v("sx_comment") })
+            .then(function () { close(); toast("Статус: " + S.dict.statuses[s]); viewLead(l.id); })
+            .catch(function (er) { ok.disabled = false; fail(er); });
+        };
+      });
+  }
+  function assignModal(l) {
+    modal("<h2>Ответственный</h2>" +
+      '<form id="af" class="stack"><fieldset class="roles">' +
+      S.users.map(function (u) {
+        var cur = +u.id === +l.assignee_id;
+        return '<label class="rolecard tight' + (cur ? " cur" : "") + '"><input type="radio" name="as" value="' + u.id + '"' + (cur ? " checked" : "") + "><span><b>" + esc(u.name) + (cur ? " <em>сейчас</em>" : "") + "</b><small>" + esc(S.dict.roles[u.role]) + "</small></span></label>";
+      }).join("") + "</fieldset>" +
+      '<div class="actions">' + (l.assignee_id ? '<button type="button" class="btn ghost" id="a_none">Снять</button>' : "") +
+      '<span style="flex:1"></span><button type="button" class="btn ghost" data-close>Отмена</button><button class="btn">Назначить</button></div></form>',
+      function (m, close) {
+        function save(uid) {
+          if ((uid || null) === (l.assignee_id ? +l.assignee_id : null)) { close(); return; }
+          api("lead_assign", { id: l.id, user_id: uid }).then(function () { close(); toast(uid ? "Ответственный: " + userName(uid) : "Ответственный снят"); viewLead(l.id); }).catch(fail);
+        }
+        m.querySelector("#af").onsubmit = function (e) {
+          e.preventDefault();
+          var r = m.querySelector('input[name="as"]:checked');
+          if (r) save(+r.value);
+        };
+        var n = m.querySelector("#a_none");
+        if (n) n.onclick = function () { save(null); };
+      });
   }
   function editModal(l, c) {
     var m = document.createElement("div");
