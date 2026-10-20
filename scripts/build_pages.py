@@ -141,10 +141,17 @@ def render(page):
   <meta property="og:title" content="{esc(page['og_title'])}">
   <meta property="og:description" content="{esc(page['description'])}">
   <meta property="og:url" content="{url}">
-  <meta property="og:image" content="{SITE}/{page['image']}">
+  <meta property="og:image" content="{SITE}/{page['og_image']}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{esc(page['og_title'])}">
   <meta name="twitter:card" content="summary_large_image">
 
+  <link rel="icon" href="favicon.ico" sizes="32x32">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#17181A">
 
   <link rel="preload" href="assets/fonts/montserrat-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -269,6 +276,7 @@ PAGES = [
         service_type="Отделка фасадов частных домов и зданий",
         price_spec={"@type": "PriceSpecification", "minPrice": 100000, "priceCurrency": "RUB"},
         image="assets/img/fasad.jpg",
+        og_image="assets/img/og-fasad.jpg",
         image_alt="Рабочие на лесах штукатурят фасад частного дома из газобетона — отделка фасада «Под Ноль»",
         eyebrow="Фасадные работы · Москва и область",
         h1="Отделка фасадов домов и зданий под ключ",
@@ -340,6 +348,7 @@ PAGES = [
         service_type="Очистка кровли от снега и наледи",
         price_spec={"@type": "UnitPriceSpecification", "minPrice": 40, "priceCurrency": "RUB", "unitText": "м²"},
         image="assets/img/sneg.jpg",
+        og_image="assets/img/og-sneg.jpg",
         image_alt="Рабочие на страховке сбрасывают снег со скатной крыши частного дома — уборка снега с крыш «Под Ноль»",
         eyebrow="Очистка кровли от снега · Москва и область",
         h1="Уборка снега с крыш и сбивание сосулек",

@@ -22,6 +22,15 @@ RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 
 ErrorDocument 404 /404.html
 
+# Один адрес на страницу: /index.html → /, /страница → /страница.html, /страница.html/ → без слэша
+RewriteCond %{THE_REQUEST} \s/+index\.html[?\s] [NC]
+RewriteRule ^index\.html$ / [L,R=301]
+RewriteRule ^(.+\.html)/$ /$1 [L,R=301]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^([a-z0-9-]+)/?$ /$1.html [L,R=301]
+
 # Кэширование статики
 <IfModule mod_expires.c>
   ExpiresActive On
@@ -32,11 +41,13 @@ ErrorDocument 404 /404.html
   ExpiresByType image/png            "access plus 1 year"
   ExpiresByType image/svg+xml        "access plus 1 year"
   ExpiresByType font/woff2           "access plus 1 year"
+  ExpiresByType image/x-icon         "access plus 1 month"
+  ExpiresByType application/manifest+json "access plus 1 week"
 </IfModule>
 
 # Сжатие (woff2 и jpeg уже сжаты — не трогаем)
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json image/svg+xml
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/manifest+json application/xml image/svg+xml image/x-icon
 </IfModule>
 
 <IfModule mod_headers.c>
@@ -48,3 +59,4 @@ ErrorDocument 404 /404.html
 </IfModule>
 
 DirectoryIndex index.html
+AddType application/manifest+json .webmanifest

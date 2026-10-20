@@ -30,6 +30,14 @@
   Фото `assets/img/fasad.jpg`, `sneg.jpg` — сгенерированы (Higgsfield), не
   реальные объекты. Новая услуга → страница в `PAGES`, карточка в
   #more-services, ссылка в подвале, Offer в OfferCatalog, адрес в sitemap.
+- **SEO (20.10.2026)**: на главной `<h1>` — строка-надзаголовок «Демонтажные работы и
+  подготовка к ремонту · Москва» (класс `hero__eyebrow`), слоган «Снимем всё лишнее» —
+  `<p class="hero__title">` (стили заголовка заданы классу, вид не изменился). Иконки:
+  `favicon.ico` (16/32/48), `favicon.svg`, `apple-touch-icon.png`, `assets/icons/icon-{192,512}.png`,
+  `site.webmanifest`. Превью для соцсетей 1200×630 — `assets/img/og-{main,fasad,sneg}.jpg`,
+  собирает `scripts/make_og.js` (Playwright, шрифт сайта). `.htaccess`: `/index.html` → `/`,
+  `/страница` и `/страница.html/` → `/страница.html`. В `robots.txt` для Яндекса `Clean-param`
+  по utm/yclid. Меняешь страницы — обнови `lastmod` в `sitemap.xml`.
 - `privacy.html`, `consent.html`, `404.html` — генерировались скриптом из шапки/подвала
   index (разово); дальше править руками, они маленькие.
 - `css/style.css` — копия стилей voidaform с правками: акцент `#E8641B` (оранжевый),

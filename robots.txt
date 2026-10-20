@@ -4,4 +4,12 @@ Disallow: /api/
 Disallow: /avito/
 Disallow: /crm/
 
+# Яндекс: метки рекламы и рассылок не делают страницу новой
+User-agent: Yandex
+Allow: /
+Disallow: /api/
+Disallow: /avito/
+Disallow: /crm/
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term&yclid&gclid&fbclid&from&etext&_openstat
+
 Sitemap: https://xn--d1aofccc0h.xn--p1ai/sitemap.xml
