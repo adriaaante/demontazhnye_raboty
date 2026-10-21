@@ -514,31 +514,58 @@
       return '<div class="hb"><span>' + esc(labels ? labels[k] || k : k) + '</span><div class="t"><i style="width:' + (obj[k] / max * 100) + '%"></i></div><b>' + obj[k] + "</b></div>";
     }).join("");
   }
+  function pct(n, of) { return of ? Math.round(n / of * 100) + " %" : "—"; }
+  function tile(label, value, sub, tone) {
+    return '<div class="tile' + (tone ? " " + tone : "") + '"><span class="tl">' + label + "</span><b>" + value + "</b>" + (sub ? '<span class="ts">' + sub + "</span>" : "") + "</div>";
+  }
   function viewStats(days) {
     if (S.me.role === "manager") { location.hash = "#/"; return; }
     shell("stats", '<div class="empty">Считаю…</div>');
     api("stats", null, "&days=" + days).then(function (d) {
-      var conv = d.total ? Math.round(d.won / d.total * 100) : 0;
-      var roles = S.dict.roles;
+      var roles = S.dict.roles, st = S.dict.statuses, T = d.total;
+      var share = function (n) { return T ? (n / T * 100) + "%" : "0"; };
+      var funnel = Object.keys(d.funnel).map(function (k) {
+        var n = d.funnel[k];
+        return '<div class="fs"><span class="fn">' + esc(st[k]) + '</span><div class="ft"><i style="width:' + share(n) + '"></i></div><b>' + n + '</b><span class="fp">' + pct(n, T) + "</span></div>";
+      }).join("");
+      var titles = Object.keys(d.by_title), tt = { total: 0, won: 0 };
+      titles.forEach(function (k) { tt.total += d.by_title[k].total; tt.won += d.by_title[k].won; });
+      var pt = { leads: 0, status: 0, comment: 0, won: 0, lost: 0 };
+      d.people.forEach(function (p) { Object.keys(pt).forEach(function (k) { pt[k] += p[k]; }); });
+
       shell("stats",
-        '<div class="row" style="justify-content:space-between"><h1>Сводка</h1><div class="tabs" id="per" style="margin:0">' +
-        [7, 30, 90].map(function (n) { return '<button type="button" data-d="' + n + '" class="' + (n === days ? "on" : "") + '">' + n + " дн</button>"; }).join("") + "</div></div>" +
+        '<div class="head" style="align-items:center;margin-bottom:12px"><h1 style="margin:0">Сводка</h1><div class="tabs" id="per" style="margin:0">' +
+        [7, 30, 90, 0].map(function (n) { return '<button type="button" data-d="' + n + '" class="' + (n === days ? "on" : "") + '">' + (n ? n + " дн" : "Всё время") + "</button>"; }).join("") + "</div></div>" +
         '<div class="tiles">' +
-        '<div class="tile"><b>' + d.total + "</b><span>заявок за " + days + " дн</span></div>" +
-        '<div class="tile"><b>' + conv + " %</b><span>дошли до договора — " + d.won + "</span></div>" +
-        '<div class="tile"><b>' + mins(d.touch_median) + "</b><span>медиана первой реакции</span></div>" +
-        '<div class="tile"><b style="color:' + (d.late ? "var(--bad)" : "inherit") + '">' + d.late + "</b><span>новых без реакции дольше 30 мин</span></div></div>" +
-        (d.revenue ? '<p class="muted small">Сумма по договорам и выполненным: ' + money(d.revenue) + "</p>" : "") +
+        tile("Заявок", T, days ? "за " + days + " дн" : "за всё время") +
+        tile("В работе", d.open, pct(d.open, T) + " от всех", "blue") +
+        tile("Договор", d.won, pct(d.won, T) + " конверсия", "ok") +
+        tile("Отказ", d.lost, pct(d.lost, T) + " от всех", "bad") +
+        "</div>" +
+        '<div class="card result"><div class="rbar">' +
+        (d.open ? '<i class="r-open" style="width:' + share(d.open) + '"></i>' : "") +
+        (d.won ? '<i class="r-won" style="width:' + share(d.won) + '"></i>' : "") +
+        (d.lost ? '<i class="r-lost" style="width:' + share(d.lost) + '"></i>' : "") + "</div>" +
+        '<div class="rleg"><span><i class="r-open"></i>В работе ' + d.open + '</span><span><i class="r-won"></i>Договор и выполнено ' + d.won + '</span><span><i class="r-lost"></i>Отказ ' + d.lost + "</span></div></div>" +
+        '<div class="tiles">' +
+        tile("Первая реакция", mins(d.touch_median), "медиана") +
+        tile("Без реакции", d.late, "новые дольше 30 мин", d.late ? "bad" : "") +
+        tile("В сметах", d.pipeline ? money(d.pipeline) : "—", "ждут решения клиента") +
+        tile("Договоры", d.revenue ? money(d.revenue) : "—", "договор и выполнено", d.revenue ? "ok" : "") +
+        "</div>" +
+        "<h2>Воронка</h2><div class=\"card\">" + (T ? funnel : '<p class="muted">Нет данных</p>') +
+        '<p class="muted small" style="margin:10px 0 0">Сколько заявок дошли хотя бы до этой стадии, включая тех, кто потом отказался.</p></div>' +
         '<div class="grid2"><div><h2>Откуда</h2><div class="card">' + bars(d.by_source, SRC) + "</div></div>" +
-        "<div><h2>Где сейчас</h2><div class=\"card\">" + bars(d.by_status, S.dict.statuses) + "</div></div></div>" +
-        "<h2>Причины отказов</h2><div class=\"card\">" + bars(d.reasons) + "</div>" +
-        "<h2>Услуги и объявления</h2><div class=\"tbl\"><table><tr><th>Что</th><th class=\"n\">Заявок</th><th class=\"n\">Договор</th></tr>" +
-        Object.keys(d.by_title).map(function (k) { return "<tr><td>" + esc(k) + '</td><td class="n">' + d.by_title[k].total + '</td><td class="n">' + d.by_title[k].won + "</td></tr>"; }).join("") + "</table></div>" +
+        "<div><h2>Причины отказов</h2><div class=\"card\">" + bars(d.reasons) + "</div></div></div>" +
+        "<h2>Услуги и объявления</h2><div class=\"tbl\"><table><tr><th>Что</th><th class=\"n\">Заявок</th><th class=\"n\">Договор</th><th class=\"n\">Конверсия</th></tr>" +
+        titles.map(function (k) { var r = d.by_title[k]; return "<tr><td>" + esc(k) + '</td><td class="n">' + r.total + '</td><td class="n">' + r.won + '</td><td class="n">' + pct(r.won, r.total) + "</td></tr>"; }).join("") +
+        '<tr class="sum"><td>Итого</td><td class="n">' + tt.total + '</td><td class="n">' + tt.won + '</td><td class="n">' + pct(tt.won, tt.total) + "</td></tr></table></div>" +
         "<h2>Работа сотрудников</h2><div class=\"tbl\"><table><tr><th>Сотрудник</th><th class=\"n\">Заявок</th><th class=\"n\">Реакция</th><th class=\"n\">Смен статуса</th><th class=\"n\">Комментариев</th><th class=\"n\">Договор</th><th class=\"n\">Отказ</th></tr>" +
         d.people.map(function (p) {
           return "<tr><td>" + esc(p.name) + ' <span class="muted small">' + esc(roles[p.role]) + '</span></td><td class="n">' + p.leads + '</td><td class="n">' + mins(p.touch_median) + '</td><td class="n">' + p.status + '</td><td class="n">' + p.comment + '</td><td class="n">' + p.won + '</td><td class="n">' + p.lost + "</td></tr>";
-        }).join("") + "</table></div>" +
-        '<p class="muted small">«Реакция» — медиана времени от поступления заявки до первого действия: смены статуса, комментария или ответа в Авито.</p>');
+        }).join("") +
+        '<tr class="sum"><td>Итого</td><td class="n">' + pt.leads + '</td><td class="n">' + mins(d.touch_median) + '</td><td class="n">' + pt.status + '</td><td class="n">' + pt.comment + '</td><td class="n">' + pt.won + '</td><td class="n">' + pt.lost + "</td></tr></table></div>" +
+        '<p class="muted small">«Заявок» у сотрудника — где он ответственный. «Реакция» — медиана времени от поступления заявки до первого действия: смены статуса, комментария или ответа в Авито. Заявки без ответственного в строки сотрудников не попадают.</p>');
       document.getElementById("per").onclick = function (e) { var b = e.target.closest("button"); if (b) viewStats(+b.getAttribute("data-d")); };
     }).catch(fail);
   }

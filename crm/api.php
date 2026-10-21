@@ -319,7 +319,8 @@ try {
             if ($me['role'] === 'manager') {
                 fail('Нет доступа', 403);
             }
-            out(['ok' => true] + stats($db, max(1, min(365, (int)($_GET['days'] ?? 30)))));
+            $days = (int)($_GET['days'] ?? 30); // 0 — за всё время
+            out(['ok' => true] + stats($db, $days <= 0 ? 0 : min(365, $days)));
 
         case 'avito_sync':
             if ($me['role'] === 'manager') {
@@ -448,7 +449,7 @@ function median(array $xs): ?float
 
 function stats(PDO $db, int $days): array
 {
-    $from = time() - $days * 86400;
+    $from = $days ? time() - $days * 86400 : 0;
     $st = $db->prepare('SELECT * FROM leads WHERE created_at >= ?');
     $st->execute([$from]);
     $leads = $st->fetchAll();
@@ -457,7 +458,35 @@ function stats(PDO $db, int $days): array
     $touch = [];
     $late = 0;
     $won = 0;
+    $lost = 0;
     $revenue = 0;
+    $pipeline = 0;
+
+    // воронка: какой самой дальней стадии заявка достигала (по истории статусов),
+    // поэтому отказ после сметы засчитывается и в «Смету»
+    $stages = array_values(array_diff(array_keys(CRM_STATUSES), ['lost']));
+    $rank = array_flip($stages);
+    $reached = [];
+    foreach ($leads as $l) {
+        $reached[(int)$l['id']] = $rank[$l['status']] ?? 0;
+    }
+    if ($leads) {
+        $ids = implode(',', array_map(fn($l) => (int)$l['id'], $leads));
+        foreach ($db->query("SELECT lead_id, meta FROM events WHERE type = 'status' AND lead_id IN ($ids)") as $e) {
+            $m = json_decode((string)$e['meta'], true) ?: [];
+            foreach ([$m['from'] ?? '', $m['to'] ?? ''] as $sKey) {
+                if (isset($rank[$sKey]) && $rank[$sKey] > $reached[(int)$e['lead_id']]) {
+                    $reached[(int)$e['lead_id']] = $rank[$sKey];
+                }
+            }
+        }
+    }
+    $funnel = array_fill_keys($stages, 0);
+    foreach ($reached as $r) {
+        for ($i = 0; $i <= $r; $i++) {
+            $funnel[$stages[$i]]++;
+        }
+    }
     foreach ($leads as $l) {
         $bySource[$l['source']] = ($bySource[$l['source']] ?? 0) + 1;
         $byStatus[$l['status']] = ($byStatus[$l['status']] ?? 0) + 1;
@@ -465,7 +494,11 @@ function stats(PDO $db, int $days): array
         $byTitle[$t] ??= ['total' => 0, 'won' => 0];
         $byTitle[$t]['total']++;
         if ($l['status'] === 'lost') {
+            $lost++;
             $reasons[$l['reason'] ?: 'не указана'] = ($reasons[$l['reason'] ?: 'не указана'] ?? 0) + 1;
+        }
+        if ($l['status'] === 'estimate') {
+            $pipeline += (int)$l['amount'];
         }
         if (in_array($l['status'], ['deal', 'done'], true)) {
             $won++;
@@ -517,9 +550,10 @@ function stats(PDO $db, int $days): array
     }
 
     return [
-        'days' => $days, 'total' => count($leads), 'won' => $won, 'revenue' => $revenue,
-        'by_source' => $bySource, 'by_status' => $byStatus, 'reasons' => $reasons,
-        'by_title' => array_slice($byTitle, 0, 12, true),
+        'days' => $days, 'total' => count($leads), 'won' => $won, 'lost' => $lost,
+        'open' => count($leads) - $won - $lost, 'revenue' => $revenue, 'pipeline' => $pipeline,
+        'funnel' => $funnel, 'by_source' => $bySource, 'by_status' => $byStatus, 'reasons' => $reasons,
+        'by_title' => $byTitle,
         'touch_median' => median($touch), 'late' => $late, 'people' => array_values($people),
     ];
 }

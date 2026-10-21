@@ -91,11 +91,13 @@ label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:60
 .kv dd{margin:0;word-break:break-word}
 
 /* сводка */
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
 @media (max-width:700px){.tiles{grid-template-columns:1fr 1fr}}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
-.tile b{display:block;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
-.tile span{font-size:12px;color:var(--muted)}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{display:block;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .tl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .ts{font-size:12px;color:var(--muted)}
+.tile.ok b{color:var(--ok)}.tile.bad b{color:var(--bad)}.tile.blue b{color:var(--blue)}
 .hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr 34px;gap:10px;align-items:center;font-size:13px;margin:6px 0}
 .hb .t{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
 .hb .t i{display:block;height:100%;background:var(--accent)}
@@ -104,6 +106,8 @@ label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:60
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+th.n{text-align:right}
+tr.sum td{font-weight:700;background:var(--bg);border-bottom:0}
 tr:last-child td{border-bottom:0}
 td.n{text-align:right;font-variant-numeric:tabular-nums}
 
@@ -196,3 +200,17 @@ button.link.danger:hover{color:var(--bad)}
 .head .btn{margin-top:2px}
 .ev b{font-weight:600}
 @media (max-width:480px){.person{flex-wrap:wrap}.pact{width:100%;padding-left:38px;margin-top:-6px}}
+/* сводка: итог по результатам и воронка */
+.result{margin-bottom:10px}
+.rbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line)}
+.rbar i{display:block;height:100%}
+.r-open{background:var(--blue)}.r-won{background:var(--ok)}.r-lost{background:var(--bad)}
+.rleg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:12px;color:var(--muted)}
+.rleg span{display:inline-flex;align-items:center;gap:6px}
+.rleg i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.fs{display:grid;grid-template-columns:minmax(110px,30%) 1fr 34px 44px;gap:10px;align-items:center;font-size:13px;margin:7px 0}
+.ft{height:22px;border-radius:5px;background:var(--bg);overflow:hidden}
+.ft i{display:block;height:100%;background:var(--accent);border-radius:5px;min-width:2px}
+.fs b{text-align:right;font-variant-numeric:tabular-nums}
+.fp{text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:560px){.fs{grid-template-columns:96px 1fr 28px 38px;gap:8px}}
