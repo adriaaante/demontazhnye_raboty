@@ -134,6 +134,9 @@
   }
 
   // ---------- каркас ----------
+  // личная настройка в браузере (порядок истории и т.п.); без хранилища — значение по умолчанию
+  function getPref(k, def) { try { return localStorage.getItem("pn_" + k) || def; } catch (e) { return def; } }
+  function setPref(k, v) { try { localStorage.setItem("pn_" + k, v); } catch (e) { /* приватный режим — просто не запомним */ } }
   function shell(active, html) {
     var head = S.me.role !== "manager";
     app.innerHTML =
@@ -142,7 +145,7 @@
       '<a href="#/" class="' + (active === "leads" ? "on" : "") + '">Заявки' + (S.unread ? '<span class="cnt">' + S.unread + "</span>" : "") + "</a>" +
       (head ? '<a href="#/stats" class="' + (active === "stats" ? "on" : "") + '">Сводка</a>' : "") +
       (head ? '<a href="#/team" class="' + (active === "team" ? "on" : "") + '">Команда</a>' : "") +
-      '<a href="#/me" class="' + (active === "me" ? "on" : "") + '">' + esc(S.me.name) + "</a>" +
+      '<a href="#/me" class="me' + (active === "me" ? " on" : "") + '" aria-label="Профиль"><span class="mename">' + esc(S.me.name) + '</span><span class="meini" aria-hidden="true">' + esc(S.me.name.charAt(0).toUpperCase()) + "</span></a>" +
       "</nav></div></header><main class=\"wrap\">" + html + '<footer class="foot"><a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener">Сделано в <img src="ff-logo.png" alt="FutureFlow" width="93" height="20"></a></footer></main>';
   }
   function boot() {
@@ -273,7 +276,7 @@
       (l.status === LOST && l.reason ? "<dt>Причина отказа</dt><dd>" + esc(l.reason) + "</dd>" : "") +
       (l.amount ? "<dt>Сумма</dt><dd>" + money(l.amount) + "</dd>" : "") +
       "</dl>";
-    var tl = d.events.slice().reverse().map(function (e) {
+    var evs = d.events.map(function (e) {
       var k = EV[e.type] || ["•", e.type], m = e.meta || {}, head = k[1];
       if (e.type === "status") head = "Статус: " + esc(S.dict.statuses[m.from] || m.from) + " → " + esc(S.dict.statuses[m.to] || m.to) + (m.reason ? " · " + esc(m.reason) : "") + (m.amount ? " · " + money(m.amount) : "");
       if (e.type === "assign") head = "Ответственный: " + (m.to ? esc(userName(m.to)) : "снят");
@@ -282,7 +285,10 @@
       var body = e.text ? (e.type === "in" || e.type === "out" || e.type === "created" ? '<div class="bubble">' + esc(e.text) + "</div>" : '<div class="txt">' + esc(e.text) + "</div>") : "";
       return '<div class="ev ' + e.type + '"><span class="ic">' + k[0] + "</span><div><div><b>" + head + "</b></div>" +
         '<div class="meta">' + who + " · " + when(e.created_at) + "</div>" + body + "</div></div>";
-    }).join("");
+    });
+    var newFirst = getPref("tl", "new") === "new";
+    function tlHtml() { return (newFirst ? evs.slice().reverse() : evs).join(""); }
+    function tlLabel() { return newFirst ? "Сначала новые" : "Сначала старые"; }
     var other = d.other.length ? "<h2>Другие обращения клиента</h2><div class=\"list\">" + d.other.map(function (o) {
       return '<a class="item" href="#/lead/' + o.id + '"><span class="bar"></span><div><div class="who">№' + o.id + " " + stChip(o.status) + '</div><div class="src">' + esc(SRC[o.source] || o.source) + (o.title ? " · " + esc(o.title) : "") + '</div></div><div class="side">' + ago(o.created_at) + "</div></a>";
     }).join("") + "</div>" : "";
@@ -305,8 +311,14 @@
       "</div>" +
       "<h2>Комментарий</h2>" +
       '<form id="cf" class="cform"><textarea id="ctext" placeholder="Что обсудили, о чём договорились, когда перезвонить"></textarea><button class="btn">Добавить комментарий</button></form>' +
-      "<h2>История</h2><div class=\"card timeline\">" + tl + "</div>" + other);
+      '<div class="h2row"><h2>История</h2><button type="button" class="sortbtn" id="tlsort" aria-label="Порядок истории">' + tlLabel() + ' <span aria-hidden="true">⇅</span></button></div>' +
+      '<div class="card timeline" id="tl">' + tlHtml() + "</div>" + other);
 
+    document.getElementById("tlsort").onclick = function () {
+      newFirst = !newFirst; setPref("tl", newFirst ? "new" : "old");
+      document.getElementById("tl").innerHTML = tlHtml();
+      this.firstChild.nodeValue = tlLabel() + " ";
+    };
     document.getElementById("chst").onclick = function () { statusModal(l); };
     document.getElementById("chasg").onclick = function () { assignModal(l); };
     document.getElementById("cf").onsubmit = function (e) {
@@ -518,6 +530,11 @@
   function tile(label, value, sub, tone) {
     return '<div class="tile' + (tone ? " " + tone : "") + '"><span class="tl">' + label + "</span><b>" + value + "</b>" + (sub ? '<span class="ts">' + sub + "</span>" : "") + "</div>";
   }
+  // ячейка с подписью: на телефоне таблица становится карточками, подпись видна рядом с числом
+  function td(label, value) { return '<td class="n" data-l="' + label + '">' + value + "</td>"; }
+  function cell(label, value, sub, tone) {
+    return '<div class="sc' + (tone ? " " + tone : "") + '"><span class="tl">' + label + "</span><b>" + value + '</b><span class="ts">' + sub + "</span></div>";
+  }
   function viewStats(days) {
     if (S.me.role === "manager") { location.hash = "#/"; return; }
     shell("stats", '<div class="empty">Считаю…</div>');
@@ -547,25 +564,25 @@
         (d.won ? '<i class="r-won" style="width:' + share(d.won) + '"></i>' : "") +
         (d.lost ? '<i class="r-lost" style="width:' + share(d.lost) + '"></i>' : "") + "</div>" +
         '<div class="rleg"><span><i class="r-open"></i>В работе ' + d.open + '</span><span><i class="r-won"></i>Договор и выполнено ' + d.won + '</span><span><i class="r-lost"></i>Отказ ' + d.lost + "</span></div></div>" +
-        '<div class="tiles">' +
-        tile("Первая реакция", mins(d.touch_median), "медиана") +
-        tile("Без реакции", d.late, "новые дольше 30 мин", d.late ? "bad" : "") +
-        tile("В сметах", d.pipeline ? money(d.pipeline) : "—", "ждут решения клиента") +
-        tile("Договоры", d.revenue ? money(d.revenue) : "—", "договор и выполнено", d.revenue ? "ok" : "") +
+        '<div class="strip">' +
+        cell("Первая реакция", mins(d.touch_median), "медиана") +
+        cell("Без реакции", d.late, "новые дольше 30 мин", d.late ? "bad" : "") +
+        cell("В сметах", d.pipeline ? money(d.pipeline) : "—", "ждут решения") +
+        cell("Договоры", d.revenue ? money(d.revenue) : "—", "на сумму", d.revenue ? "ok" : "") +
         "</div>" +
         "<h2>Воронка</h2><div class=\"card\">" + (T ? funnel : '<p class="muted">Нет данных</p>') +
-        '<p class="muted small" style="margin:10px 0 0">Сколько заявок дошли хотя бы до этой стадии, включая тех, кто потом отказался.</p></div>' +
+        '<p class="note">Сколько заявок дошли хотя бы до этой стадии — включая тех, кто потом отказался.</p></div>' +
         '<div class="grid2"><div><h2>Откуда</h2><div class="card">' + bars(d.by_source, SRC) + "</div></div>" +
         "<div><h2>Причины отказов</h2><div class=\"card\">" + bars(d.reasons) + "</div></div></div>" +
-        "<h2>Услуги и объявления</h2><div class=\"tbl\"><table><tr><th>Что</th><th class=\"n\">Заявок</th><th class=\"n\">Договор</th><th class=\"n\">Конверсия</th></tr>" +
-        titles.map(function (k) { var r = d.by_title[k]; return "<tr><td>" + esc(k) + '</td><td class="n">' + r.total + '</td><td class="n">' + r.won + '</td><td class="n">' + pct(r.won, r.total) + "</td></tr>"; }).join("") +
-        '<tr class="sum"><td>Итого</td><td class="n">' + tt.total + '</td><td class="n">' + tt.won + '</td><td class="n">' + pct(tt.won, tt.total) + "</td></tr></table></div>" +
-        "<h2>Работа сотрудников</h2><div class=\"tbl\"><table><tr><th>Сотрудник</th><th class=\"n\">Заявок</th><th class=\"n\">Реакция</th><th class=\"n\">Смен статуса</th><th class=\"n\">Комментариев</th><th class=\"n\">Договор</th><th class=\"n\">Отказ</th></tr>" +
+        "<h2>Услуги и объявления</h2><div class=\"tbl\"><table><tr class=\"h\"><th>Что</th><th class=\"n\">Заявок</th><th class=\"n\">Договор</th><th class=\"n\">Конверсия</th></tr>" +
+        titles.map(function (k) { var r = d.by_title[k]; return "<tr><td>" + esc(k) + "</td>" + td("Заявок", r.total) + td("Договор", r.won) + td("Конверсия", pct(r.won, r.total)) + "</tr>"; }).join("") +
+        '<tr class="sum"><td>Итого</td>' + td("Заявок", tt.total) + td("Договор", tt.won) + td("Конверсия", pct(tt.won, tt.total)) + "</tr></table></div>" +
+        "<h2>Работа сотрудников</h2><div class=\"tbl\"><table><tr class=\"h\"><th>Сотрудник</th><th class=\"n\">Заявок</th><th class=\"n\">Реакция</th><th class=\"n\">Смен статуса</th><th class=\"n\">Комментариев</th><th class=\"n\">Договор</th><th class=\"n\">Отказ</th></tr>" +
         d.people.map(function (p) {
-          return "<tr><td>" + esc(p.name) + ' <span class="muted small">' + esc(roles[p.role]) + '</span></td><td class="n">' + p.leads + '</td><td class="n">' + mins(p.touch_median) + '</td><td class="n">' + p.status + '</td><td class="n">' + p.comment + '</td><td class="n">' + p.won + '</td><td class="n">' + p.lost + "</td></tr>";
+          return "<tr><td>" + esc(p.name) + ' <span class="muted small">' + esc(roles[p.role]) + "</span></td>" + td("Заявок", p.leads) + td("Реакция", mins(p.touch_median)) + td("Смен статуса", p.status) + td("Комментариев", p.comment) + td("Договор", p.won) + td("Отказ", p.lost) + "</tr>";
         }).join("") +
-        '<tr class="sum"><td>Итого</td><td class="n">' + pt.leads + '</td><td class="n">' + mins(d.touch_median) + '</td><td class="n">' + pt.status + '</td><td class="n">' + pt.comment + '</td><td class="n">' + pt.won + '</td><td class="n">' + pt.lost + "</td></tr></table></div>" +
-        '<p class="muted small">«Заявок» у сотрудника — где он ответственный. «Реакция» — медиана времени от поступления заявки до первого действия: смены статуса, комментария или ответа в Авито. Заявки без ответственного в строки сотрудников не попадают.</p>');
+        '<tr class="sum"><td>Итого</td>' + td("Заявок", pt.leads) + td("Реакция", mins(d.touch_median)) + td("Смен статуса", pt.status) + td("Комментариев", pt.comment) + td("Договор", pt.won) + td("Отказ", pt.lost) + "</tr></table></div>" +
+        '<p class="note">«Заявок» — где сотрудник ответственный. «Реакция» — медиана времени до первого действия по заявке.</p>');
       document.getElementById("per").onclick = function (e) { var b = e.target.closest("button"); if (b) viewStats(+b.getAttribute("data-d")); };
     }).catch(fail);
   }
