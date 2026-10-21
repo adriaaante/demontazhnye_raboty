@@ -217,7 +217,7 @@
       var who = l.client_name || fmtPhone(l.client_phone) || "Клиент без имени";
       var late = l.status === "new" && !l.first_touch_at && now - l.created_at > 1800;
       return '<a class="item' + (+l.unread ? " unread" : "") + '" href="#/lead/' + l.id + '"><span class="bar"></span>' +
-        "<div><div class=\"who\">" + (+l.unread ? '<span class="dot" title="Есть новое"></span>' : "") + esc(who) + " " + stChip(l.status) + "</div>" +
+        "<div><div class=\"who\">" + (+l.unread ? '<span class="dot" title="Есть новое"></span>' : "") + esc(who) + " " + stChip(l.status) + (+l.amount ? '<span class="amt">' + money(l.amount) + "</span>" : "") + "</div>" +
         '<div class="src">' + esc(SRC[l.source] || l.source) + (l.title ? " · " + esc(l.title) : "") + "</div>" +
         '<div class="what">' + esc(l.last_text || l.message || "") + "</div></div>" +
         '<div class="side"><span class="' + (late ? "late" : "") + '">' + ago(l.updated_at) + "</span>" +
