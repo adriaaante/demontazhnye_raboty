@@ -122,6 +122,13 @@ UPDATE leads SET assignee_id = NULL WHERE assignee_id IS NOT NULL
 PRAGMA user_version = 3;
 SQL);
     }
+    if ($v < 4) {
+        // учётка разработчика подписана студией, а не личным именем (решение Adrian 21.10.2026)
+        $db->exec(<<<SQL
+UPDATE users SET name = 'FutureFlow' WHERE role = 'dev' AND name = 'Adrian';
+PRAGMA user_version = 4;
+SQL);
+    }
 }
 
 function crm_kv(string $k, ?string $set = null): ?string
