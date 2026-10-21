@@ -139,7 +139,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 }
 /* команда — карточками: на телефоне кнопки не уезжают за край */
 .people{display:flex;flex-direction:column;gap:8px}
-.person{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.person{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .person .nm{font-weight:600}
 .person .meta{font-size:12px;color:var(--muted)}
 
@@ -159,12 +159,16 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .btn.danger-solid{background:var(--bad)}
 .btn.danger-solid:hover{background:#A0302A}
 /* команда */
-.person .pinfo{min-width:0}
-.person .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.role{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted)}
-.role-head{background:var(--blue-soft);color:var(--blue)}
-.role-dev{background:var(--ink);color:#fff}
-.pact{display:flex;gap:4px}
+.person .pinfo{min-width:0;flex:1}
+.person .nm{line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.you{font-size:11px;font-weight:600;color:var(--muted);margin-left:4px}
+.ava{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.02em;background:var(--bg);color:var(--muted)}
+.ava-head{background:var(--blue-soft);color:var(--blue)}
+.ava-dev{background:var(--ink);color:#fff}
+.sep{opacity:.5}
+.person .meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;line-height:1.3}
+.role{font-weight:500;color:#3C3D41}
+.pact{display:flex;gap:2px;flex:none}
 button.link{background:none;border:0;padding:5px 8px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:7px}
 button.link:hover{background:var(--bg);color:var(--ink)}
 button.link.danger:hover{color:var(--bad)}
@@ -191,3 +195,4 @@ button.link.danger:hover{color:var(--bad)}
 .cform .btn{align-self:flex-end}
 .head .btn{margin-top:2px}
 .ev b{font-weight:600}
+@media (max-width:480px){.person{flex-wrap:wrap}.pact{width:100%;padding-left:38px;margin-top:-6px}}

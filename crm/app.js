@@ -437,8 +437,9 @@
         '<button type="button" class="btn" id="addUser">Добавить сотрудника</button></div>' +
         '<div class="people" id="people">' +
         d.users.map(function (u) {
-          return '<div class="person"><div class="pinfo"><div class="nm">' + esc(u.name) + (+u.id === +S.me.id ? ' <span class="muted small">· вы</span>' : "") + "</div>" +
-            '<div class="meta"><span class="role role-' + u.role + '">' + esc(roles[u.role]) + "</span>" + (u.last_login ? "входил " + ago(u.last_login) : "ещё не входил") + "</div></div>" +
+          var ini = u.name.split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase();
+          return '<div class="person"><span class="ava ava-' + u.role + '" aria-hidden="true">' + esc(ini) + '</span><div class="pinfo"><div class="nm">' + esc(u.name) + (+u.id === +S.me.id ? ' <span class="you">вы</span>' : "") + "</div>" +
+            '<div class="meta"><span class="role role-' + u.role + '">' + esc(roles[u.role]) + '</span><span class="sep">·</span>' + (u.last_login ? "входил " + ago(u.last_login) : "ещё не входил") + "</div></div>" +
             (u.can_manage ? '<div class="pact"><button type="button" class="link" data-pin="' + u.id + '" data-name="' + esc(u.name) + '">Сменить PIN</button>' +
               '<button type="button" class="link danger" data-del="' + u.id + '" data-name="' + esc(u.name) + '">Удалить</button></div>' : "") + "</div>";
         }).join("") + "</div>");
