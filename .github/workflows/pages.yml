@@ -34,6 +34,8 @@ jobs:
         run: |
           mkdir -p /tmp/site
           rsync -a --exclude '.git*' --exclude 'scripts' --exclude 'CLAUDE.md' . /tmp/site/
+          # на Pages сайт живёт в подпапке — 404 должна брать стили оттуда
+          sed -i 's#<base href="/">#<base href="/demontazhnye_raboty/">#' /tmp/site/404.html
 
       - name: Загрузить артефакт
         uses: actions/upload-pages-artifact@v3

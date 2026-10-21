@@ -190,6 +190,7 @@ h1, h2, h3 {
   color: var(--ink-soft);
   padding: 11px 0;
   position: relative;
+  white-space: nowrap;
   transition: color .3s;
 }
 
@@ -1426,6 +1427,14 @@ body.is-locked .fab {
 @media (min-width: 1000px) and (max-width: 1250px) {
   .header__phone,
   .header__messengers { display: none; }
+}
+
+/* пункты меню в одну строку: на 1000–1440px плотнее трекинг и промежутки,
+   иначе «Что вы получаете» и «Как работаем» ломались на две строки */
+@media (min-width: 1000px) and (max-width: 1440px) {
+  .nav { gap: 18px; }
+  .nav a { letter-spacing: .1em; }
+  .header__in { gap: 20px; }
 }
 
 @media (max-width: 900px) {

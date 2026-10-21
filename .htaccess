@@ -21,6 +21,7 @@ RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
 </Files>
 
 ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
 
 # Один адрес на страницу: /index.html → /, /страница → /страница.html, /страница.html/ → без слэша
 RewriteCond %{THE_REQUEST} \s/+index\.html[?\s] [NC]
