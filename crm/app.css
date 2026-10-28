@@ -177,10 +177,12 @@ button.link{background:none;border:0;padding:5px 8px;font-size:12px;font-weight:
 button.link:hover{background:var(--bg);color:var(--ink)}
 button.link.danger:hover{color:var(--bad)}
 /* подпись FutureFlow */
-.ffmark{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);text-decoration:none}
-.ffmark img{width:93px;height:20px;display:block}
-.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:center}
-.pin .ffmark{margin-top:28px;color:#8E8D89}
+.ffmark{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 11px;border-radius:100px;background:#17181A;border:1px solid rgba(232,100,27,.42);color:rgba(255,255,255,.78);text-decoration:none;font:600 12.5px/1 system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;transition:border-color .2s}
+.ffmark:hover{border-color:rgba(232,100,27,.8)}
+.ffmark svg{flex:none;display:block}
+.ffmark b{font-weight:700;background:linear-gradient(90deg,#c8dcf4,#fff 50%,#f5a623);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.foot{margin-top:40px;padding:16px 0 72px;border-top:1px solid var(--line);display:flex;justify-content:center}
+.pin .ffmark{margin-top:28px}
 
 /* статус и ответственный в карточке */
 .state{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-top:14px}

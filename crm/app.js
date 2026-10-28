@@ -10,6 +10,12 @@
   var LOST = "lost";
 
   // ---------- утилиты ----------
+  // бейдж «Сделано в FutureFlow» (futureflow-site/futureflow-badge): тёмная пилюля — градиент читается на светлом фоне CRM
+  var FFBADGE = '<a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener" aria-label="Сделано в FutureFlow">' +
+    '<svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="url(#ffGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<defs><linearGradient id="ffGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8dcf4"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#f5a623"/></linearGradient></defs>' +
+    '<rect x="8" y="8" width="16" height="16" rx="2.5"/><path d="M12 8V4M16 8V4M20 8V4 M12 28V24M16 28V24M20 28V24 M8 12H4M8 16H4M8 20H4 M28 12H24M28 16H24M28 20H24"/></svg>' +
+    '<span>Сделано в&nbsp;<b>FutureFlow</b></span></a>';
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -78,7 +84,7 @@
       '<div class="pad" id="pad">' +
       [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<button type="button" data-k="' + n + '">' + n + "</button>"; }).join("") +
       '<button type="button" class="ghost" data-k="c">Сброс</button><button type="button" data-k="0">0</button><button type="button" class="ghost" data-k="b" aria-label="Стереть">⌫</button>' +
-      "</div>" + '<a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener">Сделано в <img src="ff-logo.png" alt="FutureFlow" width="93" height="20"></a>' + "</div></div>";
+      "</div>" + FFBADGE + "</div></div>";
     var cells = document.getElementById("cells"), msg = document.getElementById("pinmsg"), busy = false;
     function draw() { [].forEach.call(cells.children, function (c, i) { c.classList.toggle("on", i < val.length); }); }
     function press(k) {
@@ -146,7 +152,7 @@
       (head ? '<a href="#/stats" class="' + (active === "stats" ? "on" : "") + '">Сводка</a>' : "") +
       (head ? '<a href="#/team" class="' + (active === "team" ? "on" : "") + '">Команда</a>' : "") +
       '<a href="#/me" class="me' + (active === "me" ? " on" : "") + '" aria-label="Профиль"><span class="mename">' + esc(S.me.name) + '</span><span class="meini" aria-hidden="true">' + esc(S.me.name.charAt(0).toUpperCase()) + "</span></a>" +
-      "</nav></div></header><main class=\"wrap\">" + html + '<footer class="foot"><a class="ffmark" href="https://futureflow.ru" target="_blank" rel="noopener">Сделано в <img src="ff-logo.png" alt="FutureFlow" width="93" height="20"></a></footer></main>';
+      "</nav></div></header><main class=\"wrap\">" + html + '<footer class="foot">' + FFBADGE + "</footer></main>";
   }
   function boot() {
     api("me").then(function (d) {
