@@ -15,7 +15,7 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ads import ADS, TAIL, PHONE
 
-REPO = "/workspace/demontazhnye_raboty"
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # корень репо — откуда ни запускай
 # Даты в фиде Авито читает по Москве, а сборка может идти на сервере в UTC.
 MSK = timezone(timedelta(hours=3))
 
@@ -74,14 +74,13 @@ OBJECTS_COMMERCIAL = ["Отделка", "Перегородка", "Стена", 
 # Вывоз мусора Авито не принимает в «Снос и демонтаж» — для него отдельная
 # категория со своим набором параметров (модерация вернула объявление с прямым
 # указанием, куда переносить).
-GARBAGE_ADS = {"vyvoz-konteyner"}
+GARBAGE_ADS = {"vyvoz-konteyner", "vynos-gruzchiki"}  # грузчики — по требованию модерации 29.10.2026
 GARBAGE_SERVICE_TYPE = "Вывоз мусора и вторсырья"
 # У этой категории свой список допустимых значений — он НЕ совпадает со
 # «Снос и демонтаж»: диапазоны пишутся через длинное тире «–», а «6 лет»
 # опыта здесь нет вовсе. Значения ниже подобраны по валидатору Авито
 # (autoload.avito.ru/api/v2/public/xml_checker), другие он отвергает.
 GARBAGE_SAME_DAY = "Да"                 # выезд в день заказа
-GARBAGE_MIN_ORDER = 6900                # минимальная сумма заказа, ₽ (контейнер 8 м³)
 GARBAGE_PERFORMERS = "2–5"              # исполнителей в команде: «1» или «2–5»
 GARBAGE_LEGAL_ENTITIES = "Да"           # работаем с юрлицами и ИП
 GARBAGE_EXPERIENCE = "1–3 года"         # из «Меньше года» / «1–3 года» / «10 лет и больше»
@@ -206,7 +205,7 @@ def garbage_ad(ad, start, imgs):
     <ContactPhone>{PHONE_RAW}</ContactPhone>
     <ManagerName>Под Ноль</ManagerName>
     <SameDayPickup>{GARBAGE_SAME_DAY}</SameDayPickup>
-    <MinimumOrderAmount>{GARBAGE_MIN_ORDER}</MinimumOrderAmount>
+    <MinimumOrderAmount>{ad['price']}</MinimumOrderAmount>
     <PerformersOnTheTeam>{GARBAGE_PERFORMERS}</PerformersOnTheTeam>
     <WorkWithLegalEntities>{GARBAGE_LEGAL_ENTITIES}</WorkWithLegalEntities>
     <WorkExperience>{GARBAGE_EXPERIENCE}</WorkExperience>
