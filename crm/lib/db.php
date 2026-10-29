@@ -129,6 +129,21 @@ UPDATE users SET name = 'FutureFlow' WHERE role = 'dev' AND name = 'Adrian';
 PRAGMA user_version = 4;
 SQL);
     }
+    if ($v < 5) {
+        // звонки через подменный номер Авито (коллтрекинг); запись разговора
+        // скачивается при первом прослушивании и кладётся рядом с базой (records/)
+        $db->exec(<<<SQL
+CREATE TABLE calls(
+  id INTEGER PRIMARY KEY, ext_id TEXT NOT NULL UNIQUE, source TEXT NOT NULL DEFAULT 'avito',
+  client_phone TEXT, our_phone TEXT, virtual_phone TEXT, item_id INTEGER, item_title TEXT,
+  started_at INTEGER NOT NULL, talk_sec INTEGER NOT NULL DEFAULT 0, wait_sec INTEGER,
+  record_file TEXT, raw TEXT, created_at INTEGER NOT NULL
+);
+CREATE INDEX calls_started ON calls(started_at);
+CREATE INDEX calls_phone ON calls(client_phone);
+PRAGMA user_version = 5;
+SQL);
+    }
 }
 
 function crm_kv(string $k, ?string $set = null): ?string

@@ -52,6 +52,12 @@ function run_avito_sync(bool $full): array
     $since = $full ? 0 : max(0, (int)(crm_kv('avito_sync_at') ?? 0) - 3600);
     $startedAt = time();
     $r = crm_avito_sync(site_config(), $since);
+    // звонки — отдельно: их сбой (коллтрекинг не включён, Авито не ответил) не мешает переписке
+    try {
+        $r += crm_avito_calls_sync(site_config(), $since);
+    } catch (Throwable $e) {
+        $r['calls_error'] = $e->getMessage();
+    }
     crm_kv('avito_sync_at', (string)$startedAt);
     return $r;
 }
@@ -139,7 +145,39 @@ try {
             out(['ok' => true] + leads_list($db, $meId, (string)($_GET['tab'] ?? 'open'), trim((string)($_GET['q'] ?? ''))));
 
         case 'lead':
-            out(['ok' => true] + lead_full($db, (int)($_GET['id'] ?? 0)));
+            out(['ok' => true] + lead_full($db, (int)($_GET['id'] ?? 0), $me['role'] === 'dev'));
+
+        // звонки пока видит только разработчик (решение Adrian 29.10.2026)
+        case 'calls':
+            if ($me['role'] !== 'dev') {
+                fail('Нет доступа', 403);
+            }
+            out(['ok' => true] + calls_list($db, (string)($_GET['f'] ?? 'all'), trim((string)($_GET['q'] ?? ''))));
+
+        case 'calls_sync':
+            if ($me['role'] !== 'dev' || !$isPost) {
+                fail('Нет доступа', 403);
+            }
+            require_once __DIR__ . '/lib/avito_sync.php';
+            @set_time_limit(180);
+            out(['ok' => true] + crm_avito_calls_sync(site_config(), $str('full') === '1' ? 0 : max(0, (int)(crm_kv('avito_sync_at') ?? 0) - 3600)));
+
+        case 'call_record':
+            if ($me['role'] !== 'dev') {
+                fail('Нет доступа', 403);
+            }
+            $st = $db->prepare('SELECT * FROM calls WHERE id = ?');
+            $st->execute([(int)($_GET['id'] ?? 0)]);
+            $call = $st->fetch();
+            if (!$call) {
+                fail('Звонок не найден', 404);
+            }
+            require_once __DIR__ . '/lib/avito_sync.php';
+            $file = crm_avito_call_record(site_config(), $call);
+            if (!$file) {
+                fail('Записи разговора нет', 404);
+            }
+            send_audio($file, ($_GET['dl'] ?? '') === '1' ? 'zvonok-' . (new DateTime('@' . $call['started_at']))->setTimezone(new DateTimeZone('Europe/Moscow'))->format('Y-m-d-Hi') . '-' . ($call['client_phone'] ?: 'nomer') : null);
 
         case 'lead_status':
             $lead = lead_row($db, (int)($in['id'] ?? 0));
@@ -417,7 +455,78 @@ function leads_list(PDO $db, int $meId, string $tab, string $q): array
     return ['leads' => $st->fetchAll(), 'counts' => $counts->fetch()];
 }
 
-function lead_full(PDO $db, int $id): array
+/** Звонки с клиентом и его заявкой (по телефону; связь считается при чтении, а не хранится). */
+function calls_list(PDO $db, string $f, string $q): array
+{
+    $where = [];
+    $args = [];
+    if ($f === 'missed') {
+        $where[] = 'k.talk_sec = 0';
+    } elseif ($f === 'record') {
+        $where[] = 'k.talk_sec > 0';
+    } elseif ($f === 'nolead') {
+        $where[] = 'NOT EXISTS (SELECT 1 FROM leads l WHERE l.client_id = c.id)';
+    }
+    if ($q !== '') {
+        $digits = preg_replace('/\D+/', '', $q);
+        $where[] = '(k.client_phone LIKE ? OR c.name LIKE ? OR k.item_title LIKE ?)';
+        array_push($args, '%' . ($digits !== '' ? $digits : $q) . '%', '%' . $q . '%', '%' . $q . '%');
+    }
+    $st = $db->prepare('SELECT k.id, k.client_phone, k.virtual_phone, k.item_title, k.started_at, k.talk_sec, k.wait_sec,
+                   k.record_file IS NOT NULL AS cached, c.id AS client_id, c.name AS client_name,
+                   COALESCE((SELECT l.id FROM leads l WHERE l.client_id = c.id AND l.created_at <= k.started_at + 86400 ORDER BY l.created_at DESC LIMIT 1),
+                            (SELECT MIN(l.id) FROM leads l WHERE l.client_id = c.id)) AS lead_id
+            FROM calls k LEFT JOIN clients c ON c.phone = k.client_phone'
+        . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY k.started_at DESC LIMIT 300');
+    $st->execute($args);
+    $counts = $db->query("SELECT COUNT(*) AS all_, SUM(talk_sec = 0) AS missed, SUM(talk_sec > 0) AS record,
+        SUM(NOT EXISTS (SELECT 1 FROM leads l JOIN clients c ON c.id = l.client_id WHERE c.phone = calls.client_phone)) AS nolead,
+        SUM(talk_sec) AS talk FROM calls")->fetch();
+    return ['calls' => $st->fetchAll(), 'counts' => $counts, 'synced_at' => (int)(crm_kv('avito_sync_at') ?? 0)];
+}
+
+/** Отдать запись с поддержкой Range — без него в Safari не перематывается. */
+function send_audio(string $file, ?string $download): never
+{
+    $size = filesize($file);
+    $ext = pathinfo($file, PATHINFO_EXTENSION);
+    $start = 0;
+    $end = $size - 1;
+    header_remove('Content-Type');
+    header('Content-Type: ' . (['wav' => 'audio/wav', 'ogg' => 'audio/ogg'][$ext] ?? 'audio/mpeg'));
+    header('Accept-Ranges: bytes');
+    header('Cache-Control: private, max-age=86400');
+    if ($download) {
+        header('Content-Disposition: attachment; filename="' . $download . '.' . $ext . '"');
+    }
+    if (preg_match('/bytes=(\d*)-(\d*)/', (string)($_SERVER['HTTP_RANGE'] ?? ''), $m) && ($m[1] !== '' || $m[2] !== '')) {
+        if ($m[1] === '') {
+            $start = max(0, $size - (int)$m[2]);
+        } else {
+            $start = (int)$m[1];
+            $end = $m[2] !== '' ? min($end, (int)$m[2]) : $end;
+        }
+        if ($start > $end) {
+            http_response_code(416);
+            header("Content-Range: bytes */$size");
+            exit;
+        }
+        http_response_code(206);
+        header("Content-Range: bytes $start-$end/$size");
+    }
+    header('Content-Length: ' . ($end - $start + 1));
+    $fh = fopen($file, 'rb');
+    fseek($fh, $start);
+    $left = $end - $start + 1;
+    while ($left > 0 && !feof($fh)) {
+        $chunk = fread($fh, min(65536, $left));
+        echo $chunk;
+        $left -= strlen($chunk);
+    }
+    exit;
+}
+
+function lead_full(PDO $db, int $id, bool $withCalls = false): array
 {
     $lead = lead_row($db, $id);
     $db->prepare('UPDATE leads SET unread = 0 WHERE id = ?')->execute([$id]);
@@ -434,7 +543,14 @@ function lead_full(PDO $db, int $id): array
     }
     $st = $db->prepare('SELECT id, source, title, status, created_at FROM leads WHERE client_id = ? AND id <> ? ORDER BY id DESC');
     $st->execute([$lead['client_id'], $id]);
-    return ['lead' => $lead, 'client' => $client, 'events' => $events, 'other' => $st->fetchAll()];
+    $other = $st->fetchAll();
+    $calls = [];
+    if ($withCalls && $client['phone']) {
+        $st = $db->prepare('SELECT id, item_title, started_at, talk_sec, wait_sec FROM calls WHERE client_phone = ? ORDER BY started_at');
+        $st->execute([$client['phone']]);
+        $calls = $st->fetchAll();
+    }
+    return ['lead' => $lead, 'client' => $client, 'events' => $events, 'other' => $other, 'calls' => $calls];
 }
 
 function median(array $xs): ?float
@@ -570,6 +686,7 @@ function export_all(PDO $db): array
         'clients' => $db->query('SELECT * FROM clients')->fetchAll(),
         'leads' => $db->query('SELECT * FROM leads')->fetchAll(),
         'events' => $events,
+        'calls' => $db->query('SELECT id, ext_id, source, client_phone, our_phone, virtual_phone, item_id, item_title, started_at, talk_sec, wait_sec FROM calls')->fetchAll(),
         'dict' => ['statuses' => CRM_STATUSES, 'reasons' => CRM_LOST_REASONS],
     ];
 }

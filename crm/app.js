@@ -1,5 +1,5 @@
 /* CRM «Под Ноль» — одностраничное приложение без сборки.
-   Экраны по адресу после #: #/ (заявки), #/lead/ID, #/team, #/stats, #/me.
+   Экраны по адресу после #: #/ (заявки), #/lead/ID, #/calls (только разработчик), #/team, #/stats, #/me.
    Все данные — через api.php; при ответе 401 показываем вход по PIN,
    при must_change — обязательную смену временного PIN. */
 (function () {
@@ -149,6 +149,7 @@
       '<header class="top"><div class="in"><a class="brand" href="#/">' + LOGO + "<span>Под Ноль <small>CRM</small></span></a>" +
       '<nav class="nav">' +
       '<a href="#/" class="' + (active === "leads" ? "on" : "") + '">Заявки' + (S.unread ? '<span class="cnt">' + S.unread + "</span>" : "") + "</a>" +
+      (S.me.role === "dev" ? '<a href="#/calls" class="' + (active === "calls" ? "on" : "") + '">Звонки</a>' : "") +
       (head ? '<a href="#/stats" class="' + (active === "stats" ? "on" : "") + '">Сводка</a>' : "") +
       (head ? '<a href="#/team" class="' + (active === "team" ? "on" : "") + '">Команда</a>' : "") +
       '<a href="#/me" class="me' + (active === "me" ? " on" : "") + '" aria-label="Профиль"><span class="mename">' + esc(S.me.name) + '</span><span class="meini" aria-hidden="true">' + esc(S.me.name.charAt(0).toUpperCase()) + "</span></a>" +
@@ -167,6 +168,7 @@
     var h = location.hash.replace(/^#\/?/, "");
     var m = h.match(/^lead\/(\d+)/);
     if (m) return viewLead(+m[1]);
+    if (h === "calls") return viewCalls();
     if (h === "team") return viewTeam();
     if (h === "stats") return viewStats(30);
     if (h === "me") return viewMe();
@@ -177,7 +179,7 @@
     stopPoll();
     S.timer = setInterval(function () {
       if (document.hidden) return;
-      var onList = !/^#\/(lead|team|stats|me)/.test(location.hash);
+      var onList = !/^#\/(lead|calls|team|stats|me)/.test(location.hash);
       api("leads", null, "&tab=" + S.tab + "&q=" + encodeURIComponent(S.q)).then(function (d) {
         setUnread(+d.counts.unread || 0);
         if (onList) drawList(d);
@@ -283,6 +285,11 @@
       (l.amount ? "<dt>Сумма</dt><dd>" + money(l.amount) + "</dd>" : "") +
       "</dl>";
     var evs = d.events.map(function (e) {
+      return { t: e.created_at, html: evHtml(e) };
+    }).concat((d.calls || []).map(function (k) {
+      return { t: k.started_at, html: callEvHtml(k) };
+    })).sort(function (a, b) { return a.t - b.t; }).map(function (x) { return x.html; });
+    function evHtml(e) {
       var k = EV[e.type] || ["•", e.type], m = e.meta || {}, head = k[1];
       if (e.type === "status") head = "Статус: " + esc(S.dict.statuses[m.from] || m.from) + " → " + esc(S.dict.statuses[m.to] || m.to) + (m.reason ? " · " + esc(m.reason) : "") + (m.amount ? " · " + money(m.amount) : "");
       if (e.type === "assign") head = "Ответственный: " + (m.to ? esc(userName(m.to)) : "снят");
@@ -291,7 +298,7 @@
       var body = e.text ? (e.type === "in" || e.type === "out" || e.type === "created" ? '<div class="bubble">' + esc(e.text) + "</div>" : '<div class="txt">' + esc(e.text) + "</div>") : "";
       return '<div class="ev ' + e.type + '"><span class="ic">' + k[0] + "</span><div><div><b>" + head + "</b></div>" +
         '<div class="meta">' + who + " · " + when(e.created_at) + "</div>" + body + "</div></div>";
-    });
+    }
     var newFirst = getPref("tl", "new") === "new";
     function tlHtml() { return (newFirst ? evs.slice().reverse() : evs).join(""); }
     function tlLabel() { return newFirst ? "Сначала новые" : "Сначала старые"; }
@@ -320,6 +327,7 @@
       '<div class="h2row"><h2>История</h2><button type="button" class="sortbtn" id="tlsort" aria-label="Порядок истории">' + tlLabel() + ' <span aria-hidden="true">⇅</span></button></div>' +
       '<div class="card timeline" id="tl">' + tlHtml() + "</div>" + other);
 
+    wirePlayers(document.getElementById("tl"));
     document.getElementById("tlsort").onclick = function () {
       newFirst = !newFirst; setPref("tl", newFirst ? "new" : "old");
       document.getElementById("tl").innerHTML = tlHtml();
@@ -421,6 +429,103 @@
       e.preventDefault();
       api("lead_edit", { id: l.id, name: v("e_name"), phone: v("e_phone"), title: v("e_title") })
         .then(function () { close(); toast("Сохранено"); viewLead(l.id); }).catch(fail);
+    };
+  }
+
+  // ---------- звонки (пока только разработчик) ----------
+  function dur(sec) { sec = +sec || 0; return Math.floor(sec / 60) + ":" + ("0" + sec % 60).slice(-2); }
+  // кнопка «Прослушать»: плеер появляется по нажатию — запись скачивается с Авито только когда её хотят послушать
+  function playBtn(id) {
+    return '<div class="cplay" data-call="' + id + '"><button type="button" class="btn ghost sm" data-play>▶ Прослушать</button></div>';
+  }
+  function callEvHtml(k) {
+    var talk = +k.talk_sec > 0;
+    return '<div class="ev call' + (talk ? "" : " missed") + '"><span class="ic">☎</span><div><div><b>' +
+      (talk ? "Звонок через Авито · " + dur(k.talk_sec) : "Пропущенный звонок через Авито") + "</b></div>" +
+      '<div class="meta">клиент · ' + when(k.started_at) + (k.item_title ? " · " + esc(k.item_title) : "") + "</div>" +
+      (talk ? playBtn(k.id) : "") + "</div></div>";
+  }
+  var SPEEDS = [1, 1.25, 1.5, 2];
+  function wirePlayers(root) {
+    if (!root) return;
+    root.addEventListener("click", function (e) {
+      var box = e.target.closest(".cplay");
+      if (!box) return;
+      var id = box.getAttribute("data-call");
+      if (e.target.closest("[data-play]")) {
+        // одновременно играет одна запись
+        [].forEach.call(document.querySelectorAll(".cplay audio"), function (a) { a.pause(); });
+        var src = "api.php?a=call_record&id=" + id;
+        box.innerHTML = '<audio controls preload="auto" src="' + src + '"></audio>' +
+          '<div class="cctl"><span class="speeds">' + SPEEDS.map(function (s) { return '<button type="button" data-sp="' + s + '"' + (s === 1 ? ' class="on"' : "") + ">" + String(s).replace(".", ",") + "×</button>"; }).join("") + "</span>" +
+          '<a href="' + src + '&dl=1" class="small">Скачать</a></div>';
+        var au = box.querySelector("audio");
+        au.addEventListener("error", function () { box.innerHTML = '<span class="muted small">Записи разговора нет — Авито её не отдал</span>'; });
+        au.addEventListener("play", function () { [].forEach.call(document.querySelectorAll(".cplay audio"), function (a) { if (a !== au) a.pause(); }); });
+        au.play().catch(function () {});
+      }
+      var sp = e.target.closest("[data-sp]");
+      if (sp) {
+        box.querySelector("audio").playbackRate = +sp.getAttribute("data-sp");
+        [].forEach.call(box.querySelectorAll("[data-sp]"), function (b) { b.classList.toggle("on", b === sp); });
+      }
+    });
+  }
+  var CTABS = [["all", "Все"], ["record", "С разговором"], ["missed", "Пропущенные"], ["nolead", "Без заявки"]];
+  var CS = { f: "all", q: "" };
+  function viewCalls() {
+    if (S.me.role !== "dev") { location.hash = "#/"; return; }
+    shell("calls",
+      '<div class="head" style="align-items:center;margin-bottom:12px"><h1 style="margin:0">Звонки</h1>' +
+      '<button type="button" class="btn ghost" id="csync">Обновить из Авито</button></div>' +
+      '<div class="row" style="margin-bottom:12px"><input type="search" id="cq" placeholder="Поиск: телефон, имя, объявление" value="' + esc(CS.q) + '" style="flex:1;min-width:200px"></div>' +
+      '<div class="tabs" id="ctabs"></div><div id="csum" class="note" style="margin:0 0 10px"></div><div class="list" id="clist"><div class="empty">Загружаю…</div></div>' +
+      '<p class="note">Раздел видит только разработчик. Звонки приходят из Авито при сверке раз в 30 минут — если у объявлений включён подменный номер.</p>');
+    var t;
+    document.getElementById("cq").oninput = function (e) { clearTimeout(t); t = setTimeout(function () { CS.q = e.target.value.trim(); loadCalls(); }, 300); };
+    document.getElementById("csync").onclick = function () {
+      var b = this; b.disabled = true; b.textContent = "Сверяю…";
+      api("calls_sync", {}).then(function (r) { toast(r.calls_new ? "Новых звонков: " + r.calls_new : "Новых звонков нет"); loadCalls(); })
+        .catch(fail).then(function () { b.disabled = false; b.textContent = "Обновить из Авито"; });
+    };
+    wirePlayers(document.getElementById("clist"));
+    loadCalls();
+  }
+  function loadCalls() {
+    api("calls", null, "&f=" + CS.f + "&q=" + encodeURIComponent(CS.q)).then(drawCalls).catch(fail);
+  }
+  function drawCalls(d) {
+    var tabs = document.getElementById("ctabs"), list = document.getElementById("clist");
+    if (!tabs || !list) return;
+    var c = d.counts || {}, cnt = { all: c.all_, record: c.record, missed: c.missed, nolead: c.nolead };
+    tabs.innerHTML = CTABS.map(function (x) {
+      return '<button type="button" data-f="' + x[0] + '" class="' + (CS.f === x[0] ? "on" : "") + '">' + x[1] + '<span class="n">' + (+cnt[x[0]] || 0) + "</span></button>";
+    }).join("");
+    tabs.onclick = function (e) { var b = e.target.closest("button"); if (b) { CS.f = b.getAttribute("data-f"); loadCalls(); } };
+    document.getElementById("csum").textContent = (+c.talk ? "Всего разговоров: " + mins(c.talk / 60) + " · " : "") +
+      (d.synced_at ? "сверка с Авито " + ago(d.synced_at) : "сверки с Авито ещё не было");
+    if (!d.calls.length) {
+      list.innerHTML = '<div class="empty">' + (CS.q || CS.f !== "all" ? "Ничего не нашлось" :
+        "Звонков пока нет.<br><span class=\"small\">Авито записывает разговоры, только когда у объявлений включён подменный номер, — тогда звонки появятся здесь сами.</span>") + "</div>";
+      return;
+    }
+    list.innerHTML = d.calls.map(function (k) {
+      var talk = +k.talk_sec > 0, who = k.client_name || fmtPhone(k.client_phone) || "Номер скрыт";
+      return '<div class="item call' + (talk ? "" : " missed") + '"><span class="bar"></span><div>' +
+        '<div class="who">' + esc(who) + (k.client_name && k.client_phone ? ' <span class="muted small">' + esc(fmtPhone(k.client_phone)) + "</span>" : "") +
+        '<span class="amt">' + (talk ? dur(k.talk_sec) : "пропущен") + "</span></div>" +
+        '<div class="src">Авито' + (k.item_title ? " · " + esc(k.item_title) : "") + "</div>" +
+        (talk ? playBtn(k.id) : "") + "</div>" +
+        '<div class="side"><span>' + ago(k.started_at) + "</span>" +
+        (k.lead_id ? '<a href="#/lead/' + k.lead_id + '">заявка №' + k.lead_id + "</a>" :
+          k.client_phone ? '<button type="button" class="link" data-mk="' + esc(k.client_phone) + '" data-it="' + esc(k.item_title || "") + '">Создать заявку</button>' : "") +
+        (k.client_phone ? '<a href="tel:+' + esc(k.client_phone) + '">Перезвонить</a>' : "") + "</div></div>";
+    }).join("");
+    list.onclick = function (e) {
+      var b = e.target.closest("[data-mk]");
+      if (!b) return;
+      api("lead_create", { phone: b.getAttribute("data-mk"), title: b.getAttribute("data-it"), channel: "Звонок через Авито", message: "" })
+        .then(function (r) { location.hash = "#/lead/" + r.id; }).catch(fail);
     };
   }
 
