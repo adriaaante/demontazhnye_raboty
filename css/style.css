@@ -1485,3 +1485,60 @@ body.is-locked .fab {
   .logo__mark { width: 26px; }
   .btn { padding: 17px 30px; }
 }
+
+/* ---------- Уведомление о cookie (Метрика грузится только после «Принять») ---------- */
+
+.cookiebar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px 24px;
+  padding: 16px 20px;
+  background: var(--dark);
+  color: rgba(255, 255, 255, .82);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.cookiebar__text { margin: 0; flex: 1 1 auto; }
+.cookiebar__text a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.cookiebar__btns { display: flex; align-items: center; gap: 14px; flex: none; }
+.cookiebar .btn { padding: 12px 22px; }
+.cookiebar__no {
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, .7);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.cookiebar__no:hover { color: #fff; }
+/* пока висит уведомление, кнопка связи не перекрывает его */
+body.has-cookiebar .fab { visibility: hidden; }
+
+@media (max-width: 640px) {
+  .cookiebar { flex-direction: column; align-items: stretch; left: 12px; right: 12px; bottom: 12px; padding: 14px 16px; }
+  .cookiebar__btns { justify-content: space-between; }
+}
+
+.footer__cookie {
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.footer__cookie:hover { color: #fff; }

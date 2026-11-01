@@ -65,7 +65,7 @@
   }
   function money(n) { return n ? Number(n).toLocaleString("ru-RU") + " ₽" : "—"; }
   function stChip(s) { return '<span class="st st-' + s + '">' + esc(S.dict.statuses[s] || s) + "</span>"; }
-  var SRC = { site: "Сайт", avito: "Авито", manual: "Звонок/вручную" };
+  var SRC = { site: "Сайт", direct: "Яндекс Директ", avito: "Авито", manual: "Звонок/вручную" };
   function userName(id) {
     for (var i = 0; i < S.users.length; i++) if (+S.users[i].id === +id) return S.users[i].name;
     return id ? "сотрудник №" + id : "";
@@ -293,7 +293,7 @@
       var k = EV[e.type] || ["•", e.type], m = e.meta || {}, head = k[1];
       if (e.type === "status") head = "Статус: " + esc(S.dict.statuses[m.from] || m.from) + " → " + esc(S.dict.statuses[m.to] || m.to) + (m.reason ? " · " + esc(m.reason) : "") + (m.amount ? " · " + money(m.amount) : "");
       if (e.type === "assign") head = "Ответственный: " + (m.to ? esc(userName(m.to)) : "снят");
-      if (e.type === "created") head = "Заявка " + (m.source === "avito" ? "из Авито" : m.source === "site" ? "с сайта" + (m.form ? " · " + esc(m.form) : "") : "заведена вручную");
+      if (e.type === "created") head = "Заявка " + (m.source === "avito" ? "из Авито" : m.source === "site" || m.source === "direct" ? "с сайта" + (m.source === "direct" ? " по рекламе Яндекса" : "") + (m.form ? " · " + esc(m.form) : "") : "заведена вручную");
       var who = e.user_name ? esc(e.user_name) : (e.type === "in" || e.type === "created" ? "клиент" : e.type === "out" ? "из Авито" : "система");
       var body = e.text ? (e.type === "in" || e.type === "out" || e.type === "created" ? '<div class="bubble">' + esc(e.text) + "</div>" : '<div class="txt">' + esc(e.text) + "</div>") : "";
       return '<div class="ev ' + e.type + '"><span class="ic">' + k[0] + "</span><div><div><b>" + head + "</b></div>" +

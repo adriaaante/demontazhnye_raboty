@@ -155,7 +155,7 @@ def render(page):
 
   <link rel="preload" href="assets/fonts/montserrat-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2">
   <noscript><style>.reveal {{ opacity: 1; transform: none; }}</style></noscript>
   <link rel="preload" as="image" href="{page['image']}">
 

@@ -10,7 +10,8 @@
 
 Токен — переменная окружения PODNOL_YANDEX_TOKEN (OAuth-приложение «Под Ноль», ClientID 8c1caf76…).
 Только поиск, Москва, 08–22 без выходных. Стратегия — максимум кликов с недельным
-бюджетом и потолком цены клика: конверсий для автостратегий пока нет (Метрики на сайте нет).
+бюджетом и потолком цены клика: пока счётчик не накопил конверсий, автостратегии учиться не на чем —
+после 10+ целей «lead» в неделю перейти на оплату за конверсии.
 Цен в объявлениях нет намеренно: сайт их не показывает, а Директ требует подтверждать цену на странице.
 """
 
@@ -25,6 +26,7 @@ CAMPAIGN = dict(
     weekly_rub=7000,               # ≈ 1 000 ₽/день — тест, менять только с согласия владельца
     bid_ceiling_rub=150,           # потолок цены клика
     hours=(8, 22),                 # показы 08:00–22:00, как работает бригада
+    metrika=113983360,             # счётчик подноль.рф; цели lead / phone / messenger
 )
 
 # Общие для всех групп минус-слова: самоделки, работа, документы, чужие ниши и то, чего не делаем
@@ -194,6 +196,7 @@ def create():
         "NegativeKeywords": {"Items": NEGATIVE},
         "TimeTargeting": {"Schedule": {"Items": schedule()}, "ConsiderWorkingWeekends": "YES"},
         "TextCampaign": {
+            "CounterIds": {"Items": [CAMPAIGN["metrika"]]},
             "BiddingStrategy": {
                 "Search": {"BiddingStrategyType": "WB_MAXIMUM_CLICKS", "WbMaximumClicks": {
                     "WeeklySpendLimit": CAMPAIGN["weekly_rub"] * micro, "BidCeiling": CAMPAIGN["bid_ceiling_rub"] * micro}},

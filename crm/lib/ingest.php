@@ -61,12 +61,14 @@ function crm_ingest_site_lead(array $f): string
         // другой клиент уже с этим телефоном? — тот же человек
         $clientId = crm_client($phone, null, (string)($f['name'] ?? ''));
         $now = time();
+        // метки рекламы Яндекса приходят в page (js/main.js хранит их на сессию) — такая заявка из Директа
+        $src = preg_match('/[?&](utm_source=yandex|yclid=)/', (string)($f['page'] ?? '')) ? 'direct' : 'site';
         $db->prepare('INSERT INTO leads(client_id, source, title, message, page, status, created_at, updated_at)
-                      VALUES(?, \'site\', ?, ?, ?, \'new\', ?, ?)')
-            ->execute([$clientId, (string)($f['source'] ?? ''), (string)($f['message'] ?? ''), (string)($f['page'] ?? ''), $now, $now]);
+                      VALUES(?, ?, ?, ?, ?, \'new\', ?, ?)')
+            ->execute([$clientId, $src, (string)($f['source'] ?? ''), (string)($f['message'] ?? ''), (string)($f['page'] ?? ''), $now, $now]);
         $leadId = (int)$db->lastInsertId();
         crm_event($leadId, $clientId, null, 'created', (string)($f['message'] ?? ''), [
-            'source' => 'site', 'form' => $f['source'] ?? '', 'page' => $f['page'] ?? '',
+            'source' => $src, 'form' => $f['source'] ?? '', 'page' => $f['page'] ?? '',
             'name' => $f['name'] ?? '', 'phone' => $f['phone'] ?? '',
         ]);
         $db->commit();

@@ -139,6 +139,7 @@
         (source ? "\nОткуда: " + source : "");
 
       function done() {
+        goal("lead");
         form.classList.add("is-done");
         if (submit) { submit.disabled = true; submit.textContent = submitLabel; }
       }
@@ -153,7 +154,7 @@
 
       function send(token) {
         var data = new FormData(form);
-        data.append("page", location.pathname);
+        data.append("page", location.pathname + adTag);
         if (token) data.append("token", token);
         return fetch(endpoint, { method: "POST", body: data })
           .then(function (r) { return r.json().catch(function () { return null; }); });
@@ -273,5 +274,86 @@
       else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
+  }
+
+  // ---------- Метки рекламы, цели и Яндекс Метрика (только после согласия на cookie) ----------
+  // Метки запоминаем на сессию: человек пришёл с рекламы, походил по сайту и только потом оставил заявку.
+  // Они уходят в поле page — по ним CRM помечает заявку как «Яндекс Директ».
+  function adTagFrom(search) {
+    return search.slice(1).split("&").filter(function (p) {
+      return /^(utm_source|utm_campaign|utm_term|yclid)=/.test(p);
+    }).map(function (p) {
+      try { return decodeURIComponent(p.replace(/\+/g, " ")); } catch (e) { return p; }
+    }).join("&");
+  }
+  var adTag = (function () {
+    var t = adTagFrom(location.search);
+    try {
+      if (t) sessionStorage.setItem("pn_ad", t);
+      t = sessionStorage.getItem("pn_ad") || "";
+    } catch (e) { /* приватный режим — берём только текущий адрес */ }
+    return t ? "?" + t : "";
+  })();
+
+  var YM_ID = 113983360;
+  function goal(name) { if (window.ym) window.ym(YM_ID, "reachGoal", name); }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href");
+    if (h.indexOf("tel:") === 0) goal("phone");
+    else if (/^https:\/\/(wa\.me|t\.me)\//.test(h)) goal("messenger");
+  });
+
+  function cookieChoice(v) {
+    try { if (v) localStorage.setItem("pn_cookie", v); return localStorage.getItem("pn_cookie"); } catch (e) { return v || null; }
+  }
+  function loadMetrika() {
+    if (window.ym) return;
+    window.ym = function () { (window.ym.a = window.ym.a || []).push(arguments); };
+    window.ym.l = +new Date();
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://mc.yandex.ru/metrika/tag.js?id=" + YM_ID;
+    document.head.appendChild(s);
+    window.ym(YM_ID, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true });
+  }
+  var bar = null;
+  function showCookieBar() {
+    if (bar) return;
+    bar = document.createElement("div");
+    bar.className = "cookiebar";
+    bar.setAttribute("role", "region");
+    bar.setAttribute("aria-label", "Файлы cookie");
+    bar.innerHTML =
+      '<p class="cookiebar__text">Используем cookie и Яндекс Метрику, чтобы понимать, откуда приходят клиенты. ' +
+      '<a href="privacy.html">Подробнее</a></p>' +
+      '<div class="cookiebar__btns"><button type="button" class="btn cookiebar__ok" data-cookie="all">Принять</button>' +
+      '<button type="button" class="cookiebar__no" data-cookie="necessary">Только необходимые</button></div>';
+    document.body.appendChild(bar);
+    document.body.classList.add("has-cookiebar");
+    bar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-cookie]");
+      if (!b) return;
+      var v = b.getAttribute("data-cookie");
+      cookieChoice(v);
+      if (v === "all") loadMetrika();
+      bar.remove(); bar = null;
+      document.body.classList.remove("has-cookiebar");
+    });
+  }
+  var choice = cookieChoice();
+  if (choice === "all") loadMetrika();
+  else if (!choice) showCookieBar();
+
+  // «Настройки cookie» в подвале — вернуть уведомление и выбрать заново
+  var fb = document.querySelector(".footer__bottom");
+  if (fb) {
+    var cs = document.createElement("button");
+    cs.type = "button";
+    cs.className = "footer__cookie";
+    cs.textContent = "Настройки cookie";
+    cs.addEventListener("click", showCookieBar);
+    fb.insertBefore(cs, fb.children[1] || null);
   }
 })();
