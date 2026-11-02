@@ -252,6 +252,18 @@
 - **Боевой домен — подноль.рф** (punycode `xn--d1aofccc0h.xn--p1ai`), куплен
   17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
   sitemap/robots указывают на punycode-домен.
+- **Выкладка без GitHub Actions — `ops/pull-deploy.php`** (02.11.2026, включается после сбоя Beget): cron хостинга
+  раз в 5 мин запускает его PHP CLI; он читает коммит `main` публичного репо (`…git/info/refs`, без лимитов API),
+  при новом — качает архив codeload, проверяет ключевые файлы, раскладывает сайт с атомарной подменой файлов.
+  Не трогает `api/config.php` / `api/avito-config.php` / базу CRM; удаляет только файлы из своего прошлого
+  манифеста. Состояние — `deploy-state/` над public_html (`sha`, `manifest.json`, `deploy.log`, замок).
+  Ошибка — `tg_alert` в личку; GitHub недоступен больше часа — тоже. `ops/.htaccess` закрывает папку от веба.
+  Порядок включения: последний push через Actions (заливает `ops/`) → cron в панели/API Beget
+  (`php8.5 <папка сайта>/public_html/ops/pull-deploy.php`) → проверочный коммит появился на сайте →
+  `deploy.yml` оставить только ручным (`workflow_dispatch`). Секреты в `api/config.php` после этого меняются
+  ручным запуском `deploy.yml` или руками на хостинге. Проверка на копии: `DEPLOY_BRANCH=<ветка> php …`.
+- **02.11.2026 с 03:00 МСК — массовый сбой Beget** (DNS, панель, сайты всех клиентов: «No Reachable Authority at
+  delegation» у beget.com, voidaform.ru, подноль.рф). Тревоги health/crm-sync в тот день — из-за него, не из-за кода.
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget
   (как у voidaform). Требует секретов репо `FTP_SERVER`/`FTP_USERNAME`/`FTP_PASSWORD`/`FTP_DIR` (свой FTP-аккаунт, привязанный к папке сайта
   подноль.рф — НЕ deploy-аккаунт voidaform, тот заперт в её папке),
