@@ -124,6 +124,17 @@ apt-get update
 apt-get install -y apache2 libapache2-mod-php8.3 php8.3-cli php8.3-curl php8.3-sqlite3 php8.3-mbstring \
   php8.3-xml php8.3-zip php8.3-intl certbot python3-certbot-apache sqlite3 unzip
 a2enmod rewrite headers expires deflate ssl
+# 1 ГБ памяти: mod_php держит процесс на запрос — ограничиваем, чтобы при всплеске не уйти в своп
+cat > /etc/apache2/conf-available/ff-mpm.conf <<'MPM'
+<IfModule mpm_prefork_module>
+  StartServers 3
+  MinSpareServers 2
+  MaxSpareServers 5
+  MaxRequestWorkers 16
+  MaxConnectionsPerChild 500
+</IfModule>
+MPM
+a2enconf ff-mpm
 cp /opt/ff/php.ini /etc/php/8.3/apache2/conf.d/99-ff.ini
 cp /opt/ff/php.ini /etc/php/8.3/cli/conf.d/99-ff.ini
 
@@ -154,7 +165,17 @@ ufw allow OpenSSH; ufw allow 80/tcp; ufw allow 443/tcp; ufw --force enable
 
 sudo -u www-data php /opt/ff/deploy.php all --force
 echo '*/5 * * * * www-data php /opt/ff/deploy.php all >/dev/null 2>&1' > /etc/cron.d/ff-deploy
+# очередь Telegram (api/tg.php): то, что не ушло сразу, досылается раз в минуту
+cp /opt/ff/tg-flush.sh /usr/local/bin/ff-tg-flush && chmod 755 /usr/local/bin/ff-tg-flush
+echo '* * * * * www-data /usr/local/bin/ff-tg-flush >/dev/null 2>&1' > /etc/cron.d/ff-tg-flush
 date > /opt/ff/out/bootstrap.done
+"""
+
+TG_FLUSH = """#!/bin/bash
+# досылает очередь Telegram каждого сайта, у которого есть api/tg.php
+for t in /var/www/*/public_html/api/tg.php; do
+  php -r 'require $argv[1]; if (function_exists("tg_flush_queue")) tg_flush_queue();' "$t"
+done
 """
 
 PHP_INI = "expose_php = Off\nupload_max_filesize = 100M\npost_max_size = 110M\nmemory_limit = 256M\nmax_execution_time = 180\n"
@@ -187,6 +208,7 @@ def main():
         "/opt/ff/sites.json": (json.dumps(sites, ensure_ascii=False, indent=1), "0640"),
         "/opt/ff/agent.key": (agent_key + "\n", "0640"),
         "/opt/ff/php.ini": (PHP_INI, "0644"),
+        "/opt/ff/tg-flush.sh": (TG_FLUSH, "0755"),
         "/etc/apache2/sites-available/000-agent.conf": (AGENT_VHOST, "0644"),
         **{f"/etc/apache2/sites-available/{d}.conf": (vhost(d), "0644") for d in SITES},
         **{f"/opt/ff/config/{d}.php": (c, "0600") for d, c in configs.items()},

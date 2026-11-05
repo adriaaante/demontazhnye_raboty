@@ -9,9 +9,25 @@
 declare(strict_types=1);
 
 /**
- * @return bool удалось ли доставить сообщение
+ * Связь с api.telegram.org из российских дата-центров рвётся: на Timeweb (11.2026) до половины
+ * соединений не устанавливается. Все такие сбои — на этапе соединения, до отправки данных, поэтому
+ * повтор безопасен и дублей не даёт. Сначала несколько быстрых попыток; не вышло — сообщение
+ * ложится в очередь над папкой сайта (tg-queue/), её досылает tg_flush_queue() по cron раз в минуту.
+ * Ответ Telegram с отказом (бот удалён из чата и т.п.) — настоящая ошибка: false, без очереди.
+ *
+ * @return bool доставлено или поставлено в очередь
  */
 function tg_send(string $botToken, string $chatId, string $text): bool
+{
+    $r = tg_try_send($botToken, $chatId, $text, 4);
+    if ($r !== null) {
+        return $r;
+    }
+    return tg_enqueue($botToken, $chatId, $text);
+}
+
+/** @return bool|null true — доставлено, false — Telegram отказал, null — не достучались */
+function tg_try_send(string $botToken, string $chatId, string $text, int $attempts): ?bool
 {
     $payload = http_build_query([
         'chat_id' => $chatId,
@@ -19,31 +35,60 @@ function tg_send(string $botToken, string $chatId, string $text): bool
         'disable_web_page_preview' => 'true',
     ]);
     $url = 'https://api.telegram.org/bot' . $botToken . '/sendMessage';
-
-    $response = false;
-    if (function_exists('curl_init')) {
+    for ($i = 0; $i < $attempts; $i++) {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 3,
             CURLOPT_TIMEOUT => 10,
         ]);
         $response = curl_exec($ch);
-    } else {
-        $response = @file_get_contents($url, false, stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
-                'content' => $payload,
-                'timeout' => 10,
-                'ignore_errors' => true,
-            ],
-        ]));
+        $connected = (float)curl_getinfo($ch, CURLINFO_APPCONNECT_TIME) > 0;
+        if (is_string($response)) {
+            $result = json_decode($response, true);
+            return is_array($result) && !empty($result['ok']);
+        }
+        if ($connected) {
+            // соединение было и оборвалось после отправки — Telegram мог принять: не повторяем
+            return null;
+        }
     }
+    return null;
+}
 
-    $result = is_string($response) ? json_decode($response, true) : null;
-    return is_array($result) && !empty($result['ok']);
+function tg_queue_dir(): string
+{
+    return dirname(__DIR__, 2) . '/tg-queue';
+}
+
+function tg_enqueue(string $botToken, string $chatId, string $text): bool
+{
+    $dir = tg_queue_dir();
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true)) {
+        return false;
+    }
+    $file = $dir . '/' . sprintf('%.6f', microtime(true)) . '-' . bin2hex(random_bytes(3)) . '.json';
+    return @file_put_contents($file, json_encode(['token' => $botToken, 'chat' => $chatId, 'text' => $text, 'at' => time()])) !== false;
+}
+
+/** Досылает очередь (cron раз в минуту): по порядку, до первого недоступного раза. */
+function tg_flush_queue(): void
+{
+    foreach (glob(tg_queue_dir() . '/*.json') ?: [] as $file) {
+        $m = json_decode((string)@file_get_contents($file), true);
+        if (!is_array($m)) {
+            @unlink($file);
+            continue;
+        }
+        $r = tg_try_send((string)$m['token'], (string)$m['chat'], (string)$m['text'], 2);
+        if ($r === null) {
+            return;   // Telegram снова не отвечает — следующая минута
+        }
+        // доставлено или окончательный отказ Telegram: из очереди убираем (отказ — в .rejected)
+        $r ? @unlink($file) : @rename($file, $file . '.rejected');
+    }
 }
 
 /**

@@ -3,9 +3,9 @@ name: Deploy to Beget
 # Основная выкладка: push в main → сайт уезжает на подноль.рф по FTP.
 # Требует секретов FTP_SERVER / FTP_USERNAME / FTP_PASSWORD / FTP_DIR
 # пока они не заданы — шаг деплоя просто пропускается (сайт живёт на Pages).
+# 05.11.2026: сайт переехал на сервер Timeweb (45.93.201.72), он сам забирает код с GitHub раз в 5 минут
+# (ops/pull-deploy.php в репо подноль.рф). FTP-выкладка на Beget осталась только ручной — на случай отката.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
