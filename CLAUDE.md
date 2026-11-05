@@ -278,7 +278,13 @@
     Зоны всех трёх доменов уже заведены в Timeweb (`POST /add-domain/{fqdn}`, A @ и www → 45.93.201.72; корень —
     только через `v2/domains/{fqdn}/dns-records` без `subdomain`, v1 отвечает `bad_subdomain_name`; MX там —
     timeweb, ящиков нет). Перенос регистрации в Timeweb — заявка `domains-requests` `transfer` с кодом AuthInfo
-    из панели Beget (через API не получить), оплата — с согласия. Как оживёт: A-записи (и www) → 45.93.201.72,
+    из панели Beget (через API не получить), оплата — с согласия.
+    **Временные адреса на время сбоя** (05.11): `https://{podnol,voidaform,nespat}.45-93-201-72.sslip.io` —
+    sslip.io сам отдаёт IP из имени, сертификаты Let's Encrypt настоящие (vhost `tmp-*.conf`). Вебхук Авито
+    подписан и на `podnol.…sslip.io/api/avito.php?k=…` (две подписки, ключ тот же, дубли гасит id сообщения) —
+    мост в Telegram работает. В новую CRM 05.11 сверкой `&full=1` залиты 43 чата / 389 сообщений; пользователей
+    в ней нет (старая база — на Beget). Когда домены переедут: снять временную подписку
+    (`v1/webhook/unsubscribe`), `a2dissite tmp-*`. Как оживёт: A-записи (и www) → 45.93.201.72,
     `certbot --apache` через агента, перенос баз CRM (подноль.рф, nespat) и почты info@voidaform.ru, затем DNS
     и регистрацию — на Timeweb, переменные `BEGET_*` и FTP-секреты — удалить.
 - **02.11.2026 с 03:00 МСК — массовый сбой Beget** (DNS, панель, сайты всех клиентов: «No Reachable Authority at
