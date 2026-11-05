@@ -252,16 +252,31 @@
 - **Боевой домен — подноль.рф** (punycode `xn--d1aofccc0h.xn--p1ai`), куплен
   17.08.2026 на том же аккаунте Beget `dudareid`, DNS у Beget. Canonical/OG/
   sitemap/robots указывают на punycode-домен.
-- **Выкладка без GitHub Actions — `ops/pull-deploy.php`** (02.11.2026, включается после сбоя Beget): cron хостинга
-  раз в 5 мин запускает его PHP CLI; он читает коммит `main` публичного репо (`…git/info/refs`, без лимитов API),
-  при новом — качает архив codeload, проверяет ключевые файлы, раскладывает сайт с атомарной подменой файлов.
-  Не трогает `api/config.php` / `api/avito-config.php` / базу CRM; удаляет только файлы из своего прошлого
-  манифеста. Состояние — `deploy-state/` над public_html (`sha`, `manifest.json`, `deploy.log`, замок).
-  Ошибка — `tg_alert` в личку; GitHub недоступен больше часа — тоже. `ops/.htaccess` закрывает папку от веба.
-  Порядок включения: последний push через Actions (заливает `ops/`) → cron в панели/API Beget
-  (`php8.5 <папка сайта>/public_html/ops/pull-deploy.php`) → проверочный коммит появился на сайте →
-  `deploy.yml` оставить только ручным (`workflow_dispatch`). Секреты в `api/config.php` после этого меняются
-  ручным запуском `deploy.yml` или руками на хостинге. Проверка на копии: `DEPLOY_BRANCH=<ветка> php …`.
+- **Сервер — Timeweb Cloud, Москва (с 05.11.2026), IP `45.93.201.72`**, id 9512847, тариф Cloud MSK Ultra 15
+  (1 ядро, 1 ГБ, 15 ГБ NVMe) + IPv4 ≈ 2 120 ₽/мес; аккаунт `ws055287` (Дудаев Арсений, почта p0d.nol@yandex.com).
+  На нём все три сайта: voidaform.ru, подноль.рф, nespatmoskva.ru. Переехали с Beget после его сбоя 02.11 (сервер
+  45.130.41.70 лежал больше трёх суток). Дешёвые тарифы в Москве/СПб на 05.11 были распроданы (`no_free_node`) —
+  при появлении можно сменить. Токен API — `ARSENIY_TIMEWEB_CLOUD_TOKEN` (в репо никогда).
+  - Собирается целиком при создании из cloud-init: `python3 ops/server/build_cloud_init.py <yaml>` (секреты — из
+    окружения, yaml в git не класть), POST `/api/v1/servers` с `cloud_init`, потом POST `/servers/{id}/ips`
+    `{"type":"ipv4"}` — IPv4 сам не выдаётся, а без него Timeweb требует на балансе месячную сумму.
+    Apache 2.4 + mod_php 8.3 (сайты на `.htaccess`), папки как на Beget: `/var/www/<домен>/public_html`,
+    рядом `crm-data/`, `deploy-state/`, `tg-queue/`. `api/config.php` обоих сайтов кладёт cloud-init.
+  - **Выкладка без Actions**: cron от www-data раз в 5 мин `php /opt/ff/deploy.php all` (= `ops/pull-deploy.php`,
+    сайты в `/opt/ff/sites.json`): коммит ветки → архив codeload → проверка обязательных файлов → атомарная
+    раскладка; удаляет только своё (manifest), секреты и базы не трогает. FTP-воркфлоу `deploy.yml` — только
+    ручной запуск (на случай отката на Beget).
+  - **Управление — агент по HTTP, не SSH** (из облачной сессии наружу только HTTPS/HTTP): `ops/server/agent.php`
+    на IP сервера, запросы подписаны HMAC, ключ = sha256('ff-agent|' + PODNOL_TG_BOT_TOKEN). Клиент —
+    `python3 ops/server/agent_call.py status | sh <скрипт> | put <файл> <имя>`; команды выполняет root
+    (systemd `ff-runner.path`). Сменил токен бота — перепиши `/opt/ff/agent.key` (через агента со старым ключом).
+  - **Telegram с сервера рвётся**: 11–13 из 20–30 соединений (05.11), все сбои — до отправки данных. Поэтому
+    `api/tg.php` повторяет соединение и при неудаче ставит сообщение в очередь `tg-queue/`; cron
+    `ff-tg-flush` (раз в минуту) досылает. Заявка не теряется, но может прийти с задержкой.
+  - **Домены пока смотрят на Beget** (45.130.41.70): регистратор и DNS — Beget (BEGET-RU), а его API/панель на
+    05.11 не работали (API — бесконечный 301 на себя, панель 502). Как оживёт: A-записи (и www) → 45.93.201.72,
+    `certbot --apache` через агента, перенос баз CRM (подноль.рф, nespat) и почты info@voidaform.ru, затем DNS
+    и регистрацию — на Timeweb, переменные `BEGET_*` и FTP-секреты — удалить.
 - **02.11.2026 с 03:00 МСК — массовый сбой Beget** (DNS, панель, сайты всех клиентов: «No Reachable Authority at
   delegation» у beget.com, voidaform.ru, подноль.рф). Тревоги health/crm-sync в тот день — из-за него, не из-за кода.
 - Основной деплой — `.github/workflows/deploy.yml`: push в `main` → FTP на Beget

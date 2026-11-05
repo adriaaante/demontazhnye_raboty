@@ -2,7 +2,7 @@
 """
 Собирает cloud-init для сервера трёх сайтов (voidaform.ru, подноль.рф, nespatmoskva.ru) на Timeweb Cloud.
 
-  python3 ops/server/build_cloud_init.py <куда записать yaml> <ключ агента>
+  python3 ops/server/build_cloud_init.py <куда записать yaml>
 
 Секреты берутся из окружения сессии (VOIDAFORM_TG_*, PODNOL_TG_BOT_TOKEN, PODNOL_AVITO_*,
 FUTUREFLOW_OWNER_CHAT_ID) и попадают только в итоговый yaml — его в git не кладём.
@@ -182,7 +182,10 @@ PHP_INI = "expose_php = Off\nupload_max_filesize = 100M\npost_max_size = 110M\nm
 
 
 def main():
-    out, agent_key = sys.argv[1], sys.argv[2]
+    out = sys.argv[1]
+    # ключ агента выводится из токена бота — тот же считает ops/server/agent_call.py
+    import hashlib
+    agent_key = hashlib.sha256(('ff-agent|' + env('PODNOL_TG_BOT_TOKEN')).encode()).hexdigest()
     owner = env("FUTUREFLOW_OWNER_CHAT_ID")
     configs = {
         "voidaform.ru": config_php([

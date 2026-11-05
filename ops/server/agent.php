@@ -52,7 +52,7 @@ switch ($a) {
             'disk_free_mb' => (int)(disk_free_space('/') / 1048576),
             'load' => sys_getloadavg(),
             'php' => PHP_VERSION,
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         break;
 
     case 'run':
@@ -67,7 +67,7 @@ switch ($a) {
         $log = $ff . "/out/{$id}.log";
         $code = @file_get_contents($ff . "/out/{$id}.code");
         echo json_encode(['ok' => true, 'done' => $code !== false, 'code' => $code === false ? null : (int)$code,
-            'out' => (string)@file_get_contents($log)], JSON_UNESCAPED_UNICODE);
+            'out' => (string)@file_get_contents($log)], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         break;
 
     case 'put':
